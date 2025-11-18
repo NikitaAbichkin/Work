@@ -1,0 +1,23 @@
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    order_date DATE
+);
+SET SESSION cte_max_recursion_depth = 300000;
+
+INSERT INTO orders (order_id, customer_id, order_date)
+WITH RECURSIVE numbers (n) AS (
+    SELECT 0
+    UNION ALL
+    SELECT n + 1 FROM numbers WHERE n < 299999
+)
+SELECT 
+    n + 1,
+    FLOOR(RAND() * 1000) + 1,
+    DATE('2020-01-01') + INTERVAL FLOOR(RAND() * 1825) DAY
+FROM numbers;
+
+
+CREATE INDEX idx_order_date ON orders(order_date);
+CREATE INDEX idx_customer_id ON orders(customer_id);
+
