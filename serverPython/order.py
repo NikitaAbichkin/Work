@@ -3,6 +3,7 @@ from typing import List
 from meal import Meal
 
 
+
 class Order:
     def __init__(self, id: str = "", date: str = ""):
         self.id = id
@@ -34,6 +35,20 @@ class Order:
             "data": self.date,
             "meals": meals_list
         }, ensure_ascii=False)
+    
+    def to_dict(self):
+        meals_list =[]
+        for i in self.meals:
+            meals_list.append(i.to_dict())
+        return {
+            "StudentID": self.id,
+            "data": self.date,
+            "meals": meals_list 
+            }
+    
+   
+    
+        
 
     def from_json(self, json_str: str):
         data = json.loads(json_str)

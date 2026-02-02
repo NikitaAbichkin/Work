@@ -15,6 +15,13 @@ class Meal:
 
     def get_cost(self) -> int:
         return self.cost
+    
+    def to_dict(self):
+        return{
+            "id":self.id,
+            "title":self.title,
+            "cost":self.cost
+               }
 
     def to_json(self) -> str:
         return json.dumps({
