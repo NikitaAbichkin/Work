@@ -4,7 +4,7 @@ import meal
 import order
 import file_helper
 class EchoServer:
-    def __init__(self,host="127.0.0.1",port=4004) -> None:
+    def __init__(self,host="0.0.0.0",port=4004) -> None:
         self.host = host
         self.port = port
         self.server = None
