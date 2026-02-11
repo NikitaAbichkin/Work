@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 from config import settings
 from database import Base
-from models import User  # чтобы Alembic видел модель
+from models import User, Post # чтобы Alembic видел модель
 from sqlalchemy import create_engine
 
 # this is the Alembic Config object, which provides

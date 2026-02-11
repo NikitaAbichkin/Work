@@ -15,14 +15,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
 
 
-class Settings2(BaseSettings):
-    MyPhoneNumber :str =  Field(alias="telephone")
-
-    model_config = SettingsConfigDict(env_file="try.env")
-
 
 settings = Settings()  # type: ignore[call-arg]
 
-s = Settings2()# type: ignore[call-arg]
 
-print (s.MyPhoneNumber)

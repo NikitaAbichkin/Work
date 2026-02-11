@@ -8,6 +8,7 @@ from fastapi import Header, FastAPI
 from fastapi import APIRouter, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from database import get_db, engine, Base
+from config import settings
 
 Base.metadata.create_all(bind=engine)
 
@@ -52,19 +53,20 @@ def login(data:dict,db:Session = Depends(get_db)):
     password_first = data["password"]
 
     user = db.query(User).filter(User.username == username).first()
-
-    if user:
-        password_hash = user.hashed_password
-        if password_utils.verify_password(password_first,password_hash):
-            data_for_creating_token = {"username":user.username,"user_id":user.id}
-            token = jwt_utils.create_token(data_for_creating_token,timedelta(minutes=3))
-            return {"access_token":token,"token_type": "bearer"}
-        
-        if not password_utils.verify_password(password_first, user.hashed_password):
-            return {"error": "Wrong password"}
     
     if not user:
         return {"error": "User not found"}
+
+    
+    password_hash = user.hashed_password
+    if password_utils.verify_password(password_first,password_hash):
+        data_for_creating_token = {"username":user.username,"user_id":user.id}
+        token = jwt_utils.create_token(data_for_creating_token,timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+        return {"access_token":token,"token_type": "bearer"}
+    else:
+        return {"error": "Wrong password"}
+    
+    
     
 @router.get("/profile")
 def profile (authorization:str  = Header(alias= "authorization")):
