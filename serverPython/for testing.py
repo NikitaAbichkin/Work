@@ -28,15 +28,3 @@
 
 
 
-# The client gets the API key from the environment variable `GEMINI_API_KEY`.
-from google import genai
-
-# Передаем ключ напрямую в конструктор (создатель объекта)
-client = genai.Client(api_key="AIzaSyDk_XDdduwwyhnT6h9RFdcw9y1PyY1Gudw")
-
-response = client.models.generate_content(
-    model="gemini-2.5-flash", # Советую юзать 2.0 flash, она сейчас самая стабильная
-    contents="Здарова! 2+2?"
-)
-
-print(response.text)

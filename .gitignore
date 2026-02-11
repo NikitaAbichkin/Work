@@ -1,2 +1,21 @@
+# IDEs
+.idea/
+.vscode/
+*.swp
+**/.vscode/
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# Node / Frontend
+node_modules/
+dist/
+.eslintcache
+
+# Mac OS
+.DS_Store__pycache__/
 .DS_Store

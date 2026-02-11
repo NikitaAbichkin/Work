@@ -83,6 +83,7 @@ async def handle_client(reader:StreamReader,writer:StreamWriter,shutdown_event):
                 payload = request["data"]
                 FileHelper.update_meal_from_menu(payload)
                 await send_response(writer,FileHelper.load_menu())
+
             elif command == "add_meal_to_menu":
                 payload = request["data"]
                 FileHelper.add_meal_to_menu(payload)
@@ -90,11 +91,7 @@ async def handle_client(reader:StreamReader,writer:StreamWriter,shutdown_event):
                 
 
 
-            
-
-
-
-
+        
             else:
                 writer.write(f"you just write : {command} \n".encode())
                 await writer.drain()

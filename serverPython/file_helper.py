@@ -24,7 +24,9 @@ class FileHelper:
     @staticmethod
     def load_menu():
         content  = FileHelper.get_string_from_file("Menu1.json")
+        
         return json.loads(content)
+    
     @staticmethod
     def  save_menu(menu:list):
         string_menu = json.dumps(menu,ensure_ascii=False)
@@ -65,17 +67,19 @@ class FileHelper:
     @staticmethod
     def update_meal_from_menu(Example:dict):
         menu = FileHelper.load_menu()
+        meal_obj = Meal.from_dict(Example)
         for i in menu:
-            if i["id"] == Example["id"]:
-                i["title"] = Example["title"]
-                i["cost"] = Example["cost"]
+            if  i["id"] == meal_obj.get_id():
+                i["title"] = meal_obj.get_title()
+                i["cost"] = meal_obj.get_cost()
                 break
         FileHelper.save_menu(menu)
-    
+
     @staticmethod
     def add_meal_to_menu(Example:dict):
         menu:list  = FileHelper.load_menu()
-        menu.append(Example)
+        meal_obj = Meal.from_dict(Example)
+        menu.append(meal_obj.to_dict())
         FileHelper.save_menu(menu)
 
 
