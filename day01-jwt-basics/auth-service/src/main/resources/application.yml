@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/jwt_auth
+    username: nikita
+    password: nikita
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+jwt:
+  secret: some-super-secret-key-that-is-long-enough-for-hmac
+  expiration: 86400000
