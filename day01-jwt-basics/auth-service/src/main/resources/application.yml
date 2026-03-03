@@ -9,7 +9,19 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+  threads:
+    virtual:
+      enabled: true
 
 jwt:
   secret: some-super-secret-key-that-is-long-enough-for-hmac
   expiration: 86400000
+
+resend:
+  api:
+    key: re_3KzzZD47_BxhPwFXFNzRqpqxT1vvPTVzJ
+
+
+
+
+

@@ -30,7 +30,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/register", "/api/login",
+                .requestMatchers("/api/auth/**",
                         "/swagger-ui/**", "/v3/api-docs/**").permitAll()  // открыть для всех
                         .anyRequest().authenticated()
 

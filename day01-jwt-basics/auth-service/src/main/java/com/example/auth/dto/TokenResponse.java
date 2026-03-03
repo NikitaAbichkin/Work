@@ -3,9 +3,11 @@ package com.example.auth.dto;
 public class TokenResponse {
     private String access_token;
     private String token_type = "bearer";
+    private  String refreshToken;
 
-    public TokenResponse(String access_token) {
+    public TokenResponse(String access_token, String refreshToken) {
         this.access_token = access_token;
+        this.refreshToken = refreshToken;
     }
 
     public String getAccess_token() {
@@ -22,5 +24,12 @@ public class TokenResponse {
 
     public void setToken_type(String token_type) {
         this.token_type = token_type;
+    }
+
+    public  String getRefreshToken(){
+        return  refreshToken;
+    }
+    public void setRefreshToken(String refreshToken){
+        this.refreshToken = refreshToken;
     }
 }

@@ -1,0 +1,18 @@
+ALTER TABLE users
+    ADD email VARCHAR(255);
+
+ALTER TABLE users
+    ADD status VARCHAR(255);
+
+ALTER TABLE users
+    ALTER COLUMN email SET NOT NULL;
+
+ALTER TABLE users
+    ALTER COLUMN status SET NOT NULL;
+
+ALTER TABLE users
+    ADD CONSTRAINT uc_users_email UNIQUE (email);
+
+DROP TABLE IF EXISTS alembic_version CASCADE;
+
+DROP TABLE IF EXISTS posts CASCADE;
