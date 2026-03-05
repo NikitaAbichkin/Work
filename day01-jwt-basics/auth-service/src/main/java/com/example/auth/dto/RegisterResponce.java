@@ -20,7 +20,7 @@ public class RegisterResponce {
         this.username = username;
     }
     public void setPassword(String password){
-        this.username = password;
+        this.password = password;
     }
 
 }

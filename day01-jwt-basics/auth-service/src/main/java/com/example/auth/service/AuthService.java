@@ -68,7 +68,7 @@ public class AuthService {
         resendEmailService.sendCode(email,code);
         return  username;
     }
-
+    @Transactional
     public TokenResponse login(String username, String password){
 
         User  user = userRepository.findUserByUsername(username)
@@ -100,6 +100,7 @@ public class AuthService {
         TokenResponse tokenResponse = new TokenResponse(token, RefreshToken);
         return  tokenResponse;
     }
+    @Transactional
     public  String confirm (String username, String code ){
         User  user = userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
@@ -138,7 +139,7 @@ public class AuthService {
         resendEmailService.sendCode(email,code);
 
     }
-
+    @Transactional
     public  TokenResponse refresh (String refreshToken){
          RefreshToken refreshToken1= refreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(() -> new RuntimeException("Токен не найден"));
@@ -167,7 +168,7 @@ public class AuthService {
 
         return  tokenResponse;
     }
-
+    @Transactional
     public  void logout (String refreshToken){
          RefreshToken Refresh_token  = refreshTokenRepository.findByToken(refreshToken)
         .orElseThrow(() -> new RuntimeException("Токен не найден"));

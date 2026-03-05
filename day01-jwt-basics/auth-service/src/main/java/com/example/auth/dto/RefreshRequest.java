@@ -6,7 +6,7 @@ public class RefreshRequest {
     public String getRefreshToken(){
         return  RefreshToken;
     }
-    public  void setRefreshToken(){
+    public  void setRefreshToken( String RefreshToken){
         this.RefreshToken = RefreshToken;
     }
 }

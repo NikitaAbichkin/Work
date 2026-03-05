@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/jwt_auth
-    username: nikita
-    password: nikita
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/jwt_auth}
+    username: ${SPRING_DATASOURCE_USERNAME:nikita}
+    password: ${SPRING_DATASOURCE_PASSWORD:nikita}
   jpa:
     hibernate:
       ddl-auto: validate

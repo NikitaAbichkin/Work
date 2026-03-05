@@ -35,12 +35,12 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public  ResponseEntity<ApiResponse<RegisterResponce>> register (@RequestBody RegisterRequest request){
-        String username = authService.register(request.getUsername(),request.getPassword(),request.getEmail());
-        RegisterResponce registerResponce = new RegisterResponce();
-        registerResponce.setUsername(request.getUsername());
-        registerResponce.setPassword(request.getPassword());
-        return  ResponseEntity.ok(ApiResponse.success(registerResponce));
+    public ResponseEntity<ApiResponse<Map<String, String>>> register(@RequestBody RegisterRequest request) {
+        String username = authService.register(request.getUsername(), request.getPassword(), request.getEmail());
+        Map<String, String> result = new HashMap<>();
+        result.put("username", username);
+        result.put("message", "Письмо с кодом подтверждения отправлено на email");
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 
     @PostMapping("/login")
@@ -64,7 +64,7 @@ public class AuthController {
         String email = resendRequest.getEmail();
         authService.sendCodeAgain(email);
         Map<String,String>  result = new HashMap<>();
-        result.put("message","code to "+ email + "was seccessfully send");
+        result.put("message","code to "+ email + " was seccessfully send");
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
