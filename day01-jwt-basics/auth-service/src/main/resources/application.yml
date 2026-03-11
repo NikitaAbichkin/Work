@@ -15,7 +15,7 @@ spring:
 
 jwt:
   secret: some-super-secret-key-that-is-long-enough-for-hmac
-  expiration: 86400000
+  expiration: 900000
 
 resend:
   api:

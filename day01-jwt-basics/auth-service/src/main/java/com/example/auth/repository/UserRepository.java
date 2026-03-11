@@ -11,6 +11,8 @@ public interface  UserRepository  extends  JpaRepository<User,Long>{
     Optional<User> findUserByUsername(String username);
     Optional<User> findUserByEmail(String email);
 
+    Optional<User> findById(Long id);
+
     @Modifying
     @Query("DELETE FROM User u WHERE u.status = 'NOT_CONFIRMED' AND NOT EXISTS (SELECT c FROM ConfirmationCode c WHERE c.user = u AND c.expiresAt > CURRENT_TIMESTAMP)")
     void deleteExpiredUnconfirmedUsers();

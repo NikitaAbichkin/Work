@@ -45,6 +45,16 @@ public class JwtService {
                 .getPayload()
                 .getSubject();
     }
+    public Long extractId(String token) {
+        return Jwts
+                .parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("user_id", Long.class);
+    }
+
 
 
     //проверяет подпись и срок действия
