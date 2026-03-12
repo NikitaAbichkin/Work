@@ -5,12 +5,13 @@ import com.example.auth.model.Goal;
 import com.example.auth.model.Stage;
 import com.example.auth.service.GoalService;
 import com.example.auth.service.StageService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/goals")
+@Slf4j
 public class GoalController {
 
     private final GoalService goalService;
@@ -43,6 +45,7 @@ public class GoalController {
     @PostMapping
     public  ResponseEntity<ApiResponse<Goal>> createGoal(HttpServletRequest httpServletRequest, @RequestBody CreateGoalRequest createGoalRequest){
         String token = tokenFrom(httpServletRequest);
+        log.info("HTTP POST /api/goals createGoal title={}", createGoalRequest.getTitle());
         String description = createGoalRequest.getDescription();
         String title = createGoalRequest.getTitle();
         List<Stage > stages = new ArrayList<>();
@@ -71,6 +74,7 @@ public class GoalController {
             @RequestParam(defaultValue = "20") int size,
             HttpServletRequest req) {
         String token = tokenFrom(req);
+        log.info("HTTP GET /api/goals page={} size={}", page, size);
         Page<Goal> goals = goalService.getUserGoals(token, page, size);
         return ResponseEntity.ok(ApiResponse.success(goals));
     }
@@ -79,6 +83,7 @@ public class GoalController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Goal>>getGoalWithStages(@PathVariable Long id, HttpServletRequest request){
         String token = tokenFrom(request);
+        log.info("HTTP GET /api/goals/{} getGoalWithStages", id);
         Goal goal = goalService.getGoalWithStages(token, id);
         return  ResponseEntity.ok(ApiResponse.success(goal));
 
@@ -88,6 +93,7 @@ public class GoalController {
     @PutMapping
     public ResponseEntity<ApiResponse<Goal>> updateGoal(@RequestBody UpdatedGoalRequest request, HttpServletRequest req) {
         String token = tokenFrom(req);
+        log.info("HTTP PUT /api/goals updateGoal goalId={}", request.getGoalId());
         Goal goal = goalService.UpdateGoal(token, request);
         return ResponseEntity.ok(ApiResponse.success(goal));
     }
@@ -96,6 +102,7 @@ public class GoalController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> deleteGoal(@PathVariable Long id, HttpServletRequest req) {
         String token = tokenFrom(req);
+        log.info("HTTP DELETE /api/goals/{} deleteGoal", id);
         String message = goalService.DeleteGoal(token, id);
         return ResponseEntity.ok(ApiResponse.success(message));
     }
@@ -107,6 +114,7 @@ public class GoalController {
             @RequestBody StageCreateRequest request,
             HttpServletRequest req) {
         String token = tokenFrom(req);
+        log.info("HTTP POST /api/goals/{}/stages addStage", goalId);
         Stage stage = stageService.addStage(
                 token,
                 goalId,
@@ -128,6 +136,7 @@ public class GoalController {
             @RequestBody UpdatedStage body,
             HttpServletRequest req) {
         String token = tokenFrom(req);
+        log.info("HTTP PUT /api/goals/{}/stages/{} updateStage", goalId, stageId);
         if (body == null) {
             body = UpdatedStage.builder().build();
         }
@@ -154,6 +163,7 @@ public class GoalController {
             @PathVariable Long stageId,
             HttpServletRequest req) {
         String token = tokenFrom(req);
+        log.info("HTTP DELETE /api/goals/{}/stages/{} deleteStage", goalId, stageId);
         String message = stageService.DeleteStage(token, goalId, stageId);
         return ResponseEntity.ok(ApiResponse.success(message));
     }
@@ -161,6 +171,7 @@ public class GoalController {
     /** Заглушка: разложение цели на этапы через ИИ. Пока просто 202 и "processing". */
     @PostMapping("/{id}/ai-decompose")
     public ResponseEntity<ApiResponse<Map<String, String>>> aiDecompose(@PathVariable Long id, HttpServletRequest req) {
+        log.info("HTTP POST /api/goals/{}/ai-decompose", id);
         Map<String, String> stub = Map.of("message", "processing");
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.success(stub));
     }

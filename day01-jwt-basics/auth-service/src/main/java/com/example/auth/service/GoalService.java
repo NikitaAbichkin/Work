@@ -7,6 +7,7 @@ import com.example.auth.model.User;
 import com.example.auth.repository.GoalRepository;
 import com.example.auth.repository.StageRepository;
 import com.example.auth.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Service
+@Slf4j
 public class GoalService {
     private final GoalRepository goalRepository;
     private final StageRepository stageRepository;
@@ -33,6 +35,7 @@ public class GoalService {
 
     public Page<Goal> getUserGoals(String token, int page, int size) {
         Long userId = jwtService.extractId(token);
+        log.info("Fetching goals for userId={} page={} size={}", userId, page, size);
 
         // создаем настройку то как нам выдавать
         Pageable pageable = PageRequest.of(page,size,Sort.by("id"));
@@ -44,10 +47,17 @@ public class GoalService {
     @Transactional(readOnly = true)
     public Goal getGoalWithStages(String token, Long goalid){
         Long userId = jwtService.extractId(token);
+        log.info("Fetching goal with stages for userId={} goalId={}", userId, goalid);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+                .orElseThrow(() -> {
+                    log.warn("User not found when fetching goal with stages userId={}", userId);
+                    return new IllegalArgumentException("Пользователь не найден");
+                });
 
-        Goal goal  = goalRepository.findByUserAndId(user,goalid).orElseThrow(()-> new IllegalArgumentException("Нет такой цели"));
+        Goal goal  = goalRepository.findByUserAndId(user,goalid).orElseThrow(() -> {
+            log.warn("Goal not found for userId={} goalId={}", userId, goalid);
+            return new IllegalArgumentException("Нет такой цели");
+        });
        
         goal.getStages().size(); // чтобы подтянуть все задачи цели
         return goal;
@@ -57,29 +67,43 @@ public class GoalService {
     public Goal createGoal(String token, String description, String title, List<Stage> stages ){
 
         Long userId = jwtService.extractId(token);
+        log.info("Create goal request for userId={} title={}", userId, title);
         if (goalRepository.findByUserIdAndTitle(userId, title).isPresent()){
+            log.warn("Create goal failed: goal with same title already exists userId={} title={}", userId, title);
             throw new IllegalArgumentException("Цель с названием '" + title + "' уже существует");
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+                .orElseThrow(() -> {
+                    log.warn("Create goal failed: user not found userId={}", userId);
+                    return new IllegalArgumentException("Пользователь не найден");
+                });
 
         Goal goal = new Goal();
         goal.setUser(user);
         goal.setTitle(title);
         goal.setDescription(description);
         goal.setStages(stages);
-        
-        return goalRepository.save(goal);
+
+        Goal saved = goalRepository.save(goal);
+        log.info("Goal created successfully id={} userId={}", saved.getId(), userId);
+        return saved;
     }
 
     @Transactional
     public Goal UpdateGoal(String token , UpdatedGoalRequest request){
         Long userId = jwtService.extractId(token);
+        log.info("Update goal request for userId={} goalId={}", userId, request.getGoalId());
 
-        User user = userRepository.findById(userId).orElseThrow(()-> new IllegalArgumentException("Нет такого юзера"));
+        User user = userRepository.findById(userId).orElseThrow(() -> {
+            log.warn("Update goal failed: user not found userId={}", userId);
+            return new IllegalArgumentException("Нет такого юзера");
+        });
         Goal goal = goalRepository.findByUserAndId(user, request.getGoalId())
-                .orElseThrow(()-> new IllegalArgumentException("Нет такой задачи"));
+                .orElseThrow(() -> {
+                    log.warn("Update goal failed: goal not found userId={} goalId={}", userId, request.getGoalId());
+                    return new IllegalArgumentException("Нет такой задачи");
+                });
         if (request.getDescription()!=null) {
            goal.setDescription(request.getDescription());
         }
@@ -91,17 +115,27 @@ public class GoalService {
         }
         goal.recalculateProgress();
 
-       return  goalRepository.save(goal);
+        Goal updated = goalRepository.save(goal);
+        log.info("Goal updated successfully id={} userId={}", updated.getId(), userId);
+        return  updated;
     }
     @Transactional
     public String  DeleteGoal(String token , Long goalID){
 
        Long userId =  jwtService.extractId(token);
+        log.info("Delete goal request for userId={} goalId={}", userId, goalID);
         User user =  userRepository.findById(userId )
-                .orElseThrow(()-> new IllegalArgumentException("такого юзера нет"));
+                .orElseThrow(() -> {
+                    log.warn("Delete goal failed: user not found userId={}", userId);
+                    return new IllegalArgumentException("такого юзера нет");
+                });
         Goal goal = goalRepository.findByUserAndId(user, goalID).
-                orElseThrow(()->  new IllegalArgumentException(" Нет такой задачи "));
+                orElseThrow(() ->  {
+                    log.warn("Delete goal failed: goal not found userId={} goalId={}", userId, goalID);
+                    return new IllegalArgumentException(" Нет такой задачи ");
+                });
         goalRepository.delete(goal);
+        log.info("Goal deleted successfully id={} userId={}", goal.getId(), userId);
         return  ("Goal with ID:"+goal.getId()+" was deleted" );
     }
 
