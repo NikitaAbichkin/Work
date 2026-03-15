@@ -83,12 +83,39 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("RATE_LIMIT_EXCEEDED", ex.getMessage()));
     }
 
+    @ExceptionHandler(GoalNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleGoalNotFound(GoalNotFoundException ex) {
+        log.warn("GoalNotFoundException handled", ex);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("GOAL_NOT_FOUND", ex.getMessage()));
+    }
+
+    @ExceptionHandler(StageNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleStageNotFound(StageNotFoundException ex) {
+        log.warn("StageNotFoundException handled", ex);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("STAGE_NOT_FOUND", ex.getMessage()));
+    }
+
+    @ExceptionHandler(GoalAccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleGoalAccessDenied(GoalAccessDeniedException ex) {
+        log.warn("GoalAccessDeniedException handled", ex);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("GOAL_ACCESS_DENIED", ex.getMessage()));
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {
         log.error("Unhandled RuntimeException", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("INTERNAL_ERROR", ex.getMessage()));
     }
+
+
+
+
+
+
 
 }
 

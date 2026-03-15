@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -48,12 +49,16 @@ public class AuthService {
     public String  register (String username, String password, String email){
         log.info("Register request received for username={} email={}", username, email);
 
+        if (userRepository.findUserByEmail(email).isPresent()) {
+            log.warn("Register failed: email={} already exists", email);
+            throw new UserEmailExistsException();
+        }
+
         if (userRepository.findUserByUsername(username).isPresent()){
             log.warn("Register failed: username={} already exists", username);
             // В ТЗ нет отдельного кода для конфликта по username, поэтому оставляем общее поведение
             throw  new RuntimeException("Username already exists");
-        } /* тут просто проверка на то что есть ли вообще юзер */
-
+        }
 
         String hashedPassword = passwordEncoder.encode(password);
 
@@ -63,7 +68,6 @@ public class AuthService {
         user.setEmail(email);
 
         userRepository.save(user);
-
 
         String code = String.valueOf(ThreadLocalRandom.current().nextInt(1000, 10000));
 
@@ -75,7 +79,6 @@ public class AuthService {
         resendEmailService.sendCode(email,code);
         log.info("User registered successfully: {}", username);
         return  username;
-            
     }
     @Transactional
     public TokenResponse login(String username, String password){
@@ -154,9 +157,16 @@ public class AuthService {
                     log.warn("Resend confirmation code failed: user not found for email={}", email);
                     return new UserNotFoundException();
                 });
-        if ("ACTIVE".equals(user.getStatus())){
+        if ("ACTIVE".equals(user.getStatus())) {
             log.warn("Resend confirmation code skipped: user already active for email={}", email);
             throw new RuntimeException("Пользователь уже подтвердил почту");
+        }
+        ConfirmationCode code1 = confirmationCodeRepository.findTopByUserOrderByCreatedAtDesc(user)
+                .orElseThrow(() -> {
+                    return new UserNotFoundException();
+                });
+        if ( LocalDateTime.now().isBefore(code1.getCreatedAt().plusMinutes(1))){
+            throw  new RuntimeException("Подождите еще минуту");
         }
 
         confirmationCodeRepository.deleteByUser(user);
@@ -221,6 +231,89 @@ public class AuthService {
         log.info("Logout successful for userId={}", Refresh_token.getUser().getId());
     }
 
+    public  void ForgotPassword(String email,String newPassword){
+        User user = userRepository.findUserByEmail(email)
+                .orElseThrow(()-> new IllegalArgumentException("Нет такого пользователя"));
+
+        user.setHashedPassword(newPassword);
+        userRepository.save(user);
+    }
+
+    public Boolean verifyCodeFromEmail( String email, String code, String newPassword ){
+
+        User user = userRepository.findUserByEmail(email)
+                .orElseThrow(()-> new IllegalArgumentException("Нет такого пользователя"));
+        ConfirmationCode confirmationCode = confirmationCodeRepository.findByCodeAndUser(code,user)
+                .orElseThrow(()-> new IllegalArgumentException("Нет такого кода"));
+
+
+
+        LocalDateTime expiresAt = confirmationCode.getExpiresAt();
+        if (LocalDateTime.now().isAfter(expiresAt)){
+            throw new TokenExpiredException();
+        }
+
+        if (!code.equals(confirmationCode.getCode())) {
+            throw new InvalidTokenException();
+        }
+        newPassword = passwordEncoder.encode(newPassword); // хэшируем
+        confirmationCodeRepository.delete(confirmationCode);
+        user.setHashedPassword(newPassword);
+        userRepository.save(user);
+
+        return true;
+    }
+    @Transactional
+    public Boolean sendPasswordResetCode(String email){
+        User user = userRepository.findUserByEmail(email).orElseThrow(()-> new IllegalArgumentException("Нет такого пользователя"));
+        String code = String.valueOf(ThreadLocalRandom.current().nextInt(1000, 10000));
+        ConfirmationCode confirmationCode = new ConfirmationCode();
+        confirmationCode.setUser(user);
+        confirmationCode.setCode(code);
+        resendEmailService.sendCode(email,code);
+        confirmationCodeRepository.save(confirmationCode);
+        return  true;
+    
+
+
+}
+@Transactional
+public  void deleteUser(String token){
+        String username = jwtService.extractUsername(token);
+        User user = userRepository.findUserByUsername(username).orElseThrow(()->{
+            log.warn("Delete user failed: user not found={}", username);
+            return new UserNotFoundException();
+        });
+        try {
+           refreshTokenRepository.deleteAllByUser(user);
+            userRepository.delete(user);
+        } catch (Exception e) {
+            log.error("Delete user failed for username={}", username, e);
+            throw new UserDeleteFailedException();
+        }
+
+
+}
+
+@Transactional
+public  void LogoutFromEverySession(String token) {
+    String username = jwtService.extractUsername(token);
+    User user = userRepository.
+            findUserByUsername(username).orElseThrow(() -> new IllegalArgumentException(" нет такого пользователя"));
+    refreshTokenRepository.deleteAllByUser(user);
+    log.info("Logout from every session successful for userId={}", user.getId());
+}
+@Transactional
+public List<RefreshToken> seeAllSessions(String token) {
+    String username = jwtService.extractUsername(token);
+    User user = userRepository.
+            findUserByUsername(username).orElseThrow(() -> new IllegalArgumentException(" нет такого пользователя"));
+    List<RefreshToken> refreshTokens = refreshTokenRepository.findAllByUser(user);
+    for (RefreshToken refreshToken : refreshTokens) {
+        log.info("Session successful for userId={}", refreshToken.getUser().getId());
+    }
+    return refreshTokens;
+}
 
 
 

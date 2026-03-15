@@ -1,6 +1,7 @@
 package com.example.auth.model;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,12 +9,24 @@ import java.util.List;
 @Entity
 @Table(name = "stages")
 public class Stage {
+    public enum PriorityStage {
+        LOW,
+        MEDIUM,
+        HIGH
+    }
+
+    public enum StatusPriority {
+        IN_PROGRESS,
+        COMPLETED,
+        FROZEN,
+        ARCHIVED
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY) //не подтягивай Goal пока тебя не попопросят
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "goal_id", nullable = false)
     private Goal goal;
 
@@ -24,26 +37,30 @@ public class Stage {
     private String description;
 
     @Column(name = "deadline")
-    private LocalDateTime deadline;
+    private LocalDate deadline;
 
     @Column(name = "starts_at")
-    private LocalDateTime startsAt;
+    private LocalDate startsAt;
 
-    @Column(name = "estimated_time")
-    private String estimatedTime;
+    @Column(name = "estimated_minutes")
+    private Integer estimatedMinutes;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "priority")
-    private String priority;
+    private PriorityStage priority = PriorityStage.MEDIUM;
 
     @Column(name = "progress", nullable = false)
     private Integer progress = 0;
 
-    /** Статус этапа: IN_PROGRESS, FROZEN, COMPLETED */
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private String status = "IN_PROGRESS";
+    private StatusPriority status = StatusPriority.IN_PROGRESS;
 
     @Column(name = "is_completed", nullable = false)
     private Boolean isCompleted = false;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Column(name = "sort_order", nullable = false)
     private Integer sortOrder = 0;
@@ -54,33 +71,38 @@ public class Stage {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
+    @Column(name = "result_text")
+    private String resultText;
 
-    @Column(name = "result_text", nullable = true)
-    private   String resultText;
-
-    @Column (name = "images", nullable = true)
     @ElementCollection
-    @CollectionTable(name = "stage_result_images", joinColumns =  @JoinColumn(name =  "stage_id"))
-    // у кождой задачи будут свои фотки ( отдельная таблица всех изображений которые буду связаны через поле
-
-    private  List<String> resultImages = new ArrayList<>();
+    @CollectionTable(name = "stage_result_images", joinColumns = @JoinColumn(name = "stage_id"))
+    @Column(name = "images")
+    private List<String> resultImages = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
-    public  String getResultText(){
-        return  resultText;
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
-    public void setResultText(String resultText){
+
+    public String getResultText() {
+        return resultText;
+    }
+
+    public void setResultText(String resultText) {
         this.resultText = resultText;
     }
 
-    public  List<String> getResultImages(){
-        return  resultImages;
+    public List<String> getResultImages() {
+        return resultImages;
     }
-    public  void setResultImages(List <String> resultImages){
+
+    public void setResultImages(List<String> resultImages) {
         this.resultImages = resultImages;
     }
 
@@ -116,66 +138,67 @@ public class Stage {
         this.description = description;
     }
 
-    public LocalDateTime getDeadline() {
+    public LocalDate getDeadline() {
         return deadline;
     }
 
-    public void setDeadline(LocalDateTime deadline) {
-        this.deadline = deadline;
+    public void setDeadline(LocalDate deadline) {
+    this.deadline = deadline;
     }
 
-    public LocalDateTime getStartsAt() {
+    public LocalDate getStartsAt() {
         return startsAt;
     }
 
-    public void setStartsAt(LocalDateTime startsAt) {
+    public void setStartsAt(LocalDate startsAt) {
         this.startsAt = startsAt;
     }
 
-    public String getEstimatedTime() {
-        return estimatedTime;
+    public Integer getEstimatedMinutes() {
+        return estimatedMinutes;
     }
 
-    public void setEstimatedTime(String estimatedTime) {
-        this.estimatedTime = estimatedTime;
+    public void setEstimatedMinutes(Integer estimatedMinutes) {
+        this.estimatedMinutes = estimatedMinutes;
     }
 
-    public String getPriority() {
+    public PriorityStage getPriority() {
         return priority;
     }
 
-    public void setPriority(String priority) {
+    public void setPriority(PriorityStage priority) {
         this.priority = priority;
     }
 
     public Integer getProgress() {
         return progress;
     }
-    public  void setProgress( Integer progress){
+
+    public void setProgress(Integer progress) {
         this.progress = progress == null ? 0 : progress;
         this.isCompleted = (this.progress == 100);
         if (this.isCompleted && this.completedAt == null) {
             this.completedAt = LocalDateTime.now();
-            this.status = "COMPLETED";
+            this.status = StatusPriority.COMPLETED;
         } else if (!isCompleted) {
             this.completedAt = null;
-            if ("COMPLETED".equals(this.status)) {
-                this.status = "IN_PROGRESS";
+            if (this.status == StatusPriority.COMPLETED) {
+                this.status = StatusPriority.IN_PROGRESS;
             }
         }
     }
 
-    public String getStatus() {
+    public StatusPriority getStatus() {
         return status;
     }
 
     /** Устанавливает статус. Допустимые значения: IN_PROGRESS, FROZEN, COMPLETED. */
-    public void setStatus(String status) {
-        if (status == null || (!status.equals("IN_PROGRESS") && !status.equals("FROZEN") && !status.equals("COMPLETED"))) {
+    public void setStatus(StatusPriority status) {
+        if (status == null) {
             return;
         }
         this.status = status;
-        if ("COMPLETED".equals(status)) {
+        if (status == StatusPriority.COMPLETED) {
             this.isCompleted = true;
             this.progress = 100;
             if (this.completedAt == null) {
@@ -187,13 +210,9 @@ public class Stage {
         }
     }
 
-
-
     public Boolean getIsCompleted() {
         return isCompleted;
     }
-
-
 
     public Integer getSortOrder() {
         return sortOrder;
@@ -218,4 +237,13 @@ public class Stage {
     public void setCompletedAt(LocalDateTime completedAt) {
         this.completedAt = completedAt;
     }
+
+    public LocalDateTime getUpdatedAt(){
+        return  updatedAt;
+    }
+    public  void setUpdatedAt(LocalDateTime updatedAt){
+        this.updatedAt = updatedAt;
+    }
+
 }
+

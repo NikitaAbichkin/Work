@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 
 @Service
 @Slf4j
@@ -16,7 +18,8 @@ public class ResendEmailService {
     private String apiKey;
 
 
-    public void sendCode(String email, String code){
+    public String sendCode(String email, String code){
+
         log.info("Sending confirmation code email to {}", email);
         Resend resend = new Resend(apiKey);
 
@@ -35,6 +38,7 @@ public class ResendEmailService {
             log.error("Error while sending confirmation email to {}", email, e);
             throw new RuntimeException("возникла ошибка с resend:  "+ e);
         }
+        return  code ;
 
     }
 

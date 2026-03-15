@@ -1,16 +1,31 @@
 package com.example.auth.model;
 
 import jakarta.persistence.*;
-import lombok.Builder;
 
-import java.security.PublicKey;
+import java.sql.Time;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
+
 @Entity
 @Table(name = "goals")
 public class Goal {
+
+    public enum GoalStatus {
+        IN_PROGRESS,
+        COMPLETED,
+        FROZEN,
+        ARCHIVED
+    }
+
+    public enum PriorityStatus {
+        LOW,
+        MEDIUM,
+        HIGH
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,14 +35,29 @@ public class Goal {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PriorityStatus priority = PriorityStatus.MEDIUM;
+
+    @Column(name = "start_date", nullable = false)
+    private LocalDate startdate;
+
+    @Column(name = "deadline")
+    private LocalDate deadline;
+
+    @Column(name = "daily_time_minutes")
+    private Integer daily_time_minutes;
+
+
     @Column(nullable = false)
     private String title;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Enumerated(EnumType.STRING)// Указываем, что хранить нужно как строку
     @Column(nullable = false)
-    private String status = "IN_PROGRESS";
+    private GoalStatus status = GoalStatus.IN_PROGRESS;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -41,11 +71,6 @@ public class Goal {
 
     @Column( name  ="progress")
     private Integer progress = 0 ;
-
-
-
-
-
 
 
 
@@ -64,6 +89,13 @@ public class Goal {
         return progress;
     }
     public void setProgress(Integer progress){
+        if (progress == null) {
+            this.progress = 0;
+            return;
+        }
+        if (progress < 0 || progress > 100) {
+            throw new IllegalArgumentException("Прогресс цели должен быть в диапазоне 0-100");
+        }
         this.progress  = progress;
     }
 
@@ -112,11 +144,11 @@ public class Goal {
         this.description = description;
     }
 
-    public String getStatus() {
+    public GoalStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(GoalStatus status) {
         this.status = status;
     }
 
@@ -139,7 +171,30 @@ public class Goal {
     public List<Stage> getStages() {
         return stages;
     }
-
+    public PriorityStatus getPriority() {
+        return priority;
+    }
+    public void setPriority(PriorityStatus priority) {
+        this.priority = priority;
+    }
+    public LocalDate getStartdate() {
+        return startdate;
+    }
+    public void setStartdate(LocalDate startdate) {
+        this.startdate = startdate;
+    }
+        public LocalDate getDeadline() {
+        return deadline;
+    }
+    public void setDeadline(LocalDate deadline) {
+        this.deadline = deadline;
+    }
+    public Integer getDaily_time_minutes() {
+        return daily_time_minutes;
+    }
+    public void setDaily_time_minutes(Integer daily_time_minutes) {
+        this.daily_time_minutes = daily_time_minutes;
+    }
     public void setStages(List<Stage> stages) {
         this.stages.clear();
         if (stages != null){

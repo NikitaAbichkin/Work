@@ -72,9 +72,6 @@ public class JwtService {
 
     public String generateRefreshToken(){
         return UUID.randomUUID().toString();
-
     }
-
-
 
 }

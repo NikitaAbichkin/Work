@@ -47,7 +47,7 @@ class AuthControllerTest {
                 "email", "test@example.com"
         ));
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
@@ -67,7 +67,7 @@ class AuthControllerTest {
                 "email", "test@example.com"
         ));
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
@@ -86,7 +86,7 @@ class AuthControllerTest {
                 "password", "secret123"
         ));
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
@@ -106,7 +106,7 @@ class AuthControllerTest {
                 "password", "secret123"
         ));
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
@@ -123,7 +123,7 @@ class AuthControllerTest {
                 "code", "1234"
         ));
 
-        mockMvc.perform(post("/api/auth/confirm")
+        mockMvc.perform(post("/api/v1/auth/confirm")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
@@ -141,7 +141,7 @@ class AuthControllerTest {
                 "refreshToken", "old-refresh-token"
         ));
 
-        mockMvc.perform(post("/api/auth/refresh")
+        mockMvc.perform(post("/api/v1/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
@@ -158,7 +158,7 @@ class AuthControllerTest {
                 "refreshToken", "some-refresh-token"
         ));
 
-        mockMvc.perform(post("/api/auth/logout")
+        mockMvc.perform(post("/api/v1/auth/logout")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
@@ -174,7 +174,7 @@ class AuthControllerTest {
                 "email", "test@example.com"
         ));
 
-        mockMvc.perform(post("/api/auth/resend")
+        mockMvc.perform(post("/api/v1/auth/resend")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())

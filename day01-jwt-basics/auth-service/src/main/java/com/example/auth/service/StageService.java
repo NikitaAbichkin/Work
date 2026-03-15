@@ -1,6 +1,9 @@
 package com.example.auth.service;
 
 import com.example.auth.dto.UpdatedStage;
+import com.example.auth.exception.GoalNotFoundException;
+import com.example.auth.exception.StageNotFoundException;
+import com.example.auth.exception.UserNotFoundException;
 import com.example.auth.model.Goal;
 import com.example.auth.model.User;
 import com.example.auth.repository.GoalRepository;
@@ -11,7 +14,7 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Service
 @Slf4j
@@ -29,18 +32,18 @@ public class StageService {
         this.userRepository = userRepository;
     }
     @Transactional
-    public Stage addStage(String token, Long goalId, String title, String description, String priority, String estimatedTime, LocalDateTime deadline, LocalDateTime startsAt, Integer order ){
+    public Stage addStage(String token, Long goalId, String title, String description, String priority, Integer estimatedMinutes, LocalDate deadline, LocalDate startsAt, Integer order ){
         Long userId = jwtService.extractId(token);
         log.info("Add stage request for userId={} goalId={} title={}", userId, goalId, title);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.warn("Add stage failed: user not found userId={}", userId);
-                    return new IllegalArgumentException("Нет такого пользователя");
+                    return new UserNotFoundException();
                 });
         Goal goal  = goalRepository.
                 findByUserAndId(user,goalId).orElseThrow(() -> {
                     log.warn("Add stage failed: goal not found userId={} goalId={}", userId, goalId);
-                    return new IllegalArgumentException(" нет такой цели");
+                    return new GoalNotFoundException(goalId);
                 });
 
 
@@ -50,8 +53,10 @@ public class StageService {
         stage.setGoal(goal);
         stage.setDeadline(deadline);
         stage.setDescription(description);
-        stage.setEstimatedTime(estimatedTime);
-        stage.setPriority(priority);
+        stage.setEstimatedMinutes(estimatedMinutes);
+        if (priority != null) {
+            stage.setPriority(Stage.PriorityStage.valueOf(priority.toUpperCase()));
+        }
         stage.setTitle(title);
         stage.setStartsAt(startsAt);
         stage.setSortOrder(order);
@@ -73,12 +78,13 @@ public class StageService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.warn("Update stage failed: user not found userId={}", userId);
-                    return new IllegalArgumentException("Нет такого пользователя");
+                    return new UserNotFoundException();
                 });
+        Long requestGoalId = updatedStage.getGoalId();
         Goal goal  = goalRepository.
-                findByUserAndId(user, updatedStage.getGoalId()).orElseThrow(() -> {
-                    log.warn("Update stage failed: goal not found userId={} goalId={}", userId, updatedStage.getGoalId());
-                    return new IllegalArgumentException(" нет такой цели");
+                findByUserAndId(user, requestGoalId).orElseThrow(() -> {
+                    log.warn("Update stage failed: goal not found userId={} goalId={}", userId, requestGoalId);
+                    return new GoalNotFoundException(requestGoalId);
                 });
 
         Long goalId = goal.getId();
@@ -86,7 +92,7 @@ public class StageService {
         Stage stage = stageRepository.findByIdAndGoalId(stageId, goalId)
                 .orElseThrow(() -> {
                     log.warn("Update stage failed: stage not found goalId={} stageId={}", goalId, stageId);
-                    return new IllegalArgumentException("Нет такой задачи");
+                    return new StageNotFoundException(stageId);
                 });
 
         if (updatedStage.getTitle() != null) {
@@ -96,10 +102,10 @@ public class StageService {
             stage.setDescription(updatedStage.getDescription());
         }
         if (updatedStage.getPriority() != null) {
-            stage.setPriority(updatedStage.getPriority());
+            stage.setPriority(Stage.PriorityStage.valueOf(updatedStage.getPriority().toUpperCase()));
         }
-        if (updatedStage.getEstimatedTime() != null) {
-            stage.setEstimatedTime(updatedStage.getEstimatedTime());
+        if (updatedStage.getEstimatedMinutes() != null) {
+            stage.setEstimatedMinutes(updatedStage.getEstimatedMinutes());
         }
         if (updatedStage.getDeadline() != null) {
             stage.setDeadline(updatedStage.getDeadline());
@@ -111,7 +117,7 @@ public class StageService {
             stage.setProgress(updatedStage.getProgress());
         }
         if (updatedStage.getStatus() != null) {
-            stage.setStatus(updatedStage.getStatus());
+            stage.setStatus(Stage.StatusPriority.valueOf(updatedStage.getStatus().toUpperCase()));
         }
 
         Stage saved = stageRepository.save(stage);
@@ -127,17 +133,17 @@ public class StageService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.warn("Delete stage failed: user not found userId={}", userId);
-                    return new IllegalArgumentException("Нет такого пользователя");
+                    return new UserNotFoundException();
                 });
         Goal goal  = goalRepository.
                 findByUserAndId(user, goalId).orElseThrow(() -> {
                     log.warn("Delete stage failed: goal not found userId={} goalId={}", userId, goalId);
-                    return new IllegalArgumentException(" нет такой цели");
+                    return new GoalNotFoundException(goalId);
                 });
         Stage stage = stageRepository.findByIdAndGoalId(stageid, goal.getId())
                 .orElseThrow(() -> {
                     log.warn("Delete stage failed: stage not found goalId={} stageId={}", goalId, stageid);
-                    return new IllegalArgumentException("Нет такой задачи");
+                    return new StageNotFoundException(stageid);
                 });
 
         stageRepository.delete(stage);
