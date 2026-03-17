@@ -21,6 +21,13 @@ resend:
   api:
     key: re_3KzzZD47_BxhPwFXFNzRqpqxT1vvPTVzJ
 
+Ai:
+  AI_API_KEY: "pza_g9Xz2YHx_ETB8QEBlamkSP3FsExa2Ea5"
+  AI_MODEL: "deepseek/deepseek-chat-v3-0324"
+  AI_TIMEOUT_MS: 30000
+  AiUrl: "https://polza.ai/api/v1/chat/completions"
+
+
 
 
 

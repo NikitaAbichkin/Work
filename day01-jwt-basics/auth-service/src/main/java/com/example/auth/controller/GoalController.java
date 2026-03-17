@@ -5,6 +5,7 @@ import com.example.auth.model.Goal;
 import com.example.auth.model.Result;
 import com.example.auth.model.Stage;
 import com.example.auth.repository.StageRepository;
+import com.example.auth.service.AiPlanService;
 import com.example.auth.service.GoalService;
 import com.example.auth.service.ResultService;
 import com.example.auth.service.StageService;
@@ -34,12 +35,14 @@ public class GoalController {
     private final GoalService goalService;
     private final StageService stageService;
     private final ResultService resultService;
+    private  final AiPlanService aiPlanService;
 
-    public GoalController(GoalService goalService, StageService stageService, StageRepository stageRepository, ResultService resultService) {
+    public GoalController(GoalService goalService, StageService stageService, StageRepository stageRepository, ResultService resultService,AiPlanService aiPlanService) {
         this.goalService = goalService;
         this.stageService = stageService;
         this.stageRepository = stageRepository;
         this.resultService = resultService;
+        this.aiPlanService = aiPlanService;
     }
 
     /**
@@ -187,10 +190,12 @@ public class GoalController {
      * Заглушка: разложение цели на этапы через ИИ. Пока просто 202 и "processing".
      */
     @PostMapping("/{id}/ai-decompose")
-    public ResponseEntity<ApiResponse<Map<String, String>>> aiDecompose(@PathVariable Long id, HttpServletRequest req) {
+    public ResponseEntity<ApiResponse<AIPlanResponce>> aiDecompose(HttpServletRequest req ,   @RequestBody AiPlanRequest request ,@PathVariable Long id ) {
         log.info("HTTP POST /api/v1/goals/{}/ai-decompose", id);
-        Map<String, String> stub = Map.of("message", "processing");
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.success(stub));
+
+        AIPlanResponce aiPlanResponce = aiPlanService.generatePlan(request.getPrompt());
+        return  ResponseEntity.ok(ApiResponse.success(aiPlanResponce));
+
     }
 
     @GetMapping("/goals")
