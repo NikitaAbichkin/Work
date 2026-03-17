@@ -20,6 +20,7 @@ export default function Navbar() {
         {isAuthenticated ? (
           <>
             <NavLink to="/dashboard">Панель</NavLink>
+            <NavLink to="/goals">Цели</NavLink>
             <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
               {user?.username}
             </span>

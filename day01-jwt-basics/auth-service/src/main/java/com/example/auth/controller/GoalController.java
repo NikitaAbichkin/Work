@@ -9,6 +9,7 @@ import com.example.auth.service.AiPlanService;
 import com.example.auth.service.GoalService;
 import com.example.auth.service.ResultService;
 import com.example.auth.service.StageService;
+import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -189,14 +190,21 @@ public class GoalController {
     /**
      * Заглушка: разложение цели на этапы через ИИ. Пока просто 202 и "processing".
      */
-    @PostMapping("/{id}/ai-decompose")
-    public ResponseEntity<ApiResponse<AIPlanResponce>> aiDecompose(HttpServletRequest req ,   @RequestBody AiPlanRequest request ,@PathVariable Long id ) {
+    @PostMapping("/ai-decompose")
+    public ResponseEntity<ApiResponse<AIPlanResponce>> aiDecompose(HttpServletRequest httpServletRequest, @RequestBody AiPlanRequest request , @PathVariable Long id ) {
+        String token = tokenFrom(httpServletRequest);
         log.info("HTTP POST /api/v1/goals/{}/ai-decompose", id);
-
-        AIPlanResponce aiPlanResponce = aiPlanService.generatePlan(request.getPrompt());
+        AIPlanResponce aiPlanResponce = aiPlanService.generatePlan(token,request.getPrompt());
         return  ResponseEntity.ok(ApiResponse.success(aiPlanResponce));
 
     }
+    @PostMapping("/ai-help")
+    public ResponseEntity<ApiResponse<AIPlanResponce>> aiHelp( HttpServletRequest httpServletRequest , @RequestBody AIHelpGoalReqest request,@PathVariable Long goalId){
+        String token = tokenFrom(httpServletRequest);
+        AIPlanResponce aiPlanResponce = aiPlanService.HelpWithGoal(token,request.getPromt(), request.getGoalId());
+        return ResponseEntity.ok(ApiResponse.success(aiPlanResponce));
+    }
+
 
     @GetMapping("/goals")
     public ResponseEntity<ApiResponse<Page<Goal>>> searchForParameters(@ModelAttribute ParametersForSearching parameters, HttpServletRequest request) {

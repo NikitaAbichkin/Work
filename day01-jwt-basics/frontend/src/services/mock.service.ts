@@ -97,4 +97,12 @@ export const mockService: AuthService = {
       throw new Error('Недействительный токен');
     }
   },
+
+  async confirm(_username: string, _code: string): Promise<void> {
+    await delay(300);
+  },
+
+  async resend(_email: string): Promise<void> {
+    await delay(300);
+  },
 };

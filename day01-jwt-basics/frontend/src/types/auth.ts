@@ -6,6 +6,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   username: string;
   password: string;
+  email: string;
 }
 
 export interface LoginResponse {
@@ -46,4 +47,6 @@ export interface AuthService {
   login(data: LoginRequest): Promise<LoginResponse>;
   register(data: RegisterRequest): Promise<RegisterResponse>;
   getProfile(token: string): Promise<ProfileResponse>;
+  confirm(username: string, code: string): Promise<void>;
+  resend(email: string): Promise<void>;
 }

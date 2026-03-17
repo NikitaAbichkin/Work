@@ -6,6 +6,8 @@ import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import GoalsPage from './pages/GoalsPage';
+import GoalDetailPage from './pages/GoalDetailPage';
 import './App.css';
 
 function App() {
@@ -22,6 +24,22 @@ function App() {
             element={
               <PrivateRoute>
                 <DashboardPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/goals"
+            element={
+              <PrivateRoute>
+                <GoalsPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/goals/:id"
+            element={
+              <PrivateRoute>
+                <GoalDetailPage />
               </PrivateRoute>
             }
           />
