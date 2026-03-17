@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface GoalRepository extends JpaRepository<Goal, Long> {
@@ -21,24 +22,15 @@ public interface GoalRepository extends JpaRepository<Goal, Long> {
 
     @Query(
 "select  g from Goal g where g.user.id =:userId "+
-"and (:status is null or g.status = :status) "+
-"and (:priority is null or g.priority = :priority)"
+"and (:statuses is null or g.status  IN :statuses) "+
+"and (:priorities is null or g.priority  IN :priorities)"
     )
     Page<Goal> findByFilters(
             @Param("userId") Long userId,
-            @Param("status")Goal.GoalStatus status,
-            @Param("priority")Goal.PriorityStatus priority,
+            @Param("statuses")List<Goal.GoalStatus> statuses,
+            @Param("priorities")List<Goal.PriorityStatus> priorities,
             Pageable pageable
             );
-
-
-
-
-
-
-
-
-
 
 
 }

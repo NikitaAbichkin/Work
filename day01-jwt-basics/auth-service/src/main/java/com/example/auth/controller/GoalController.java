@@ -2,17 +2,23 @@ package com.example.auth.controller;
 
 import com.example.auth.dto.*;
 import com.example.auth.model.Goal;
+import com.example.auth.model.Result;
 import com.example.auth.model.Stage;
+import com.example.auth.repository.StageRepository;
 import com.example.auth.service.GoalService;
+import com.example.auth.service.ResultService;
 import com.example.auth.service.StageService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,57 +30,67 @@ import java.util.Map;
 @RequestMapping("/api/v1/goals")
 @Slf4j
 public class GoalController {
-
+    private  final StageRepository stageRepository;
     private final GoalService goalService;
     private final StageService stageService;
+    private final ResultService resultService;
 
-    public GoalController(GoalService goalService, StageService stageService) {
+    public GoalController(GoalService goalService, StageService stageService, StageRepository stageRepository, ResultService resultService) {
         this.goalService = goalService;
         this.stageService = stageService;
+        this.stageRepository = stageRepository;
+        this.resultService = resultService;
     }
 
-    /** Достаём JWT из заголовка Authorization (без слова "Bearer "). */
+    /**
+     * Достаём JWT из заголовка Authorization (без слова "Bearer ").
+     */
     private static String tokenFrom(HttpServletRequest request) {
         String auth = request.getHeader("Authorization");
         return (auth != null && auth.startsWith("Bearer ")) ? auth.substring(7) : null;
     }
 
-    /** Создать цель. Тело: название, описание, список этапов. */
+    /**
+     * Создать цель. Тело: название, описание, список этапов.
+     */
     @PostMapping
     public ResponseEntity<ApiResponse<Goal>> createGoal(HttpServletRequest httpServletRequest,
-                                                        @RequestBody CreateGoalRequest createGoalRequest){
+                                                        @RequestBody CreateGoalRequest createGoalRequest) {
         String token = tokenFrom(httpServletRequest);
         log.info("HTTP POST /api/v1/goals createGoal title={}", createGoalRequest.getTitle());
-        Goal goal = goalService.createGoal(token,createGoalRequest);
-        return  ResponseEntity.status(HttpStatus.CREATED)  // 1. создаём builder с кодом 201
+        Goal goal = goalService.createGoal(token, createGoalRequest);
+        return ResponseEntity.status(HttpStatus.CREATED)  // 1. создаём builder с кодом 201
                 .body(ApiResponse.success(goal));
     }
 
-    /** Список целей пользователя с пагинацией (page, size в query). */
+    /**
+     * Список целей пользователя с пагинацией (page, size в query).
+     */
     @GetMapping
-    public ResponseEntity<ApiResponse<GoalsListResponse>> getGoals(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            HttpServletRequest req) {
-        String token = tokenFrom(req);
-        log.info("HTTP GET /api/v1/goals page={} size={}", page, size);
-        Page<Goal> goals = goalService.getUserGoals(token, page, size);
-        GoalsListResponse body = new GoalsListResponse(goals.getContent(), goals.getTotalElements());
-        return ResponseEntity.ok(ApiResponse.success(body));
+    public ResponseEntity<ApiResponse<Page<Goal>>> getGoals(
+            HttpServletRequest request, @ModelAttribute ParametersForSearching parameters ) {
+        String token = tokenFrom(request);
+        Page<Goal> pages = goalService.findAllByParameters(token, parameters);
+        return ResponseEntity.ok(ApiResponse.success(pages));
+
     }
 
-    /** Одна цель по id со всеми этапами (для детального просмотра). */
+    /**
+     * Одна цель по id со всеми этапами (для детального просмотра).
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Goal>>getGoalWithStages(@PathVariable Long id, HttpServletRequest request){
+    public ResponseEntity<ApiResponse<Goal>> getGoalWithStages(@PathVariable Long id, HttpServletRequest request) {
         String token = tokenFrom(request);
         log.info("HTTP GET /api/v1/goals/{} getGoalWithStages", id);
         Goal goal = goalService.getGoalWithStages(token, id);
-        return  ResponseEntity.ok(ApiResponse.success(goal));
+        return ResponseEntity.ok(ApiResponse.success(goal));
 
     }
 
-    /** Частично обновить цель по id. В теле — только изменяемые поля. */
-    @PatchMapping("/{id}")
+    /**
+     * Частично обновить цель по id. В теле — только изменяемые поля.
+     */
+    @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Goal>> updateGoal(@PathVariable Long id,
                                                         @RequestBody UpdatedGoalRequest request,
                                                         HttpServletRequest req) {
@@ -89,7 +105,9 @@ public class GoalController {
         return ResponseEntity.ok(ApiResponse.success(goal));
     }
 
-    /** Удалить цель по id. */
+    /**
+     * Удалить цель по id.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteGoal(@PathVariable Long id, HttpServletRequest req) {
         String token = tokenFrom(req);
@@ -98,7 +116,9 @@ public class GoalController {
         return ResponseEntity.noContent().build();
     }
 
-    /** Добавить задачу к цели. В теле — поля задачи (title, description, deadline и т.д.). */
+    /**
+     * Добавить задачу к цели. В теле — поля задачи (title, description, deadline и т.д.).
+     */
     @PostMapping("/{goalId}/tasks")
     public ResponseEntity<ApiResponse<Stage>> addStage(
             @PathVariable Long goalId,
@@ -119,8 +139,10 @@ public class GoalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(stage));
     }
 
-    /** Обновить задачу. goalId и stageId из пути, остальное в теле (можно частично: status, progress, title и т.д.). */
-    @PutMapping("/{goalId}/tasks/{stageId}")
+    /**
+     * Обновить задачу. goalId и stageId из пути, остальное в теле (можно частично: status, progress, title и т.д.).
+     */
+    @PatchMapping("/{goalId}/tasks/{stageId}")
     public ResponseEntity<ApiResponse<Stage>> updateStage(
             @PathVariable Long goalId,
             @PathVariable Long stageId,
@@ -147,7 +169,9 @@ public class GoalController {
         return ResponseEntity.ok(ApiResponse.success(stage));
     }
 
-    /** Удалить этап у цели. */
+    /**
+     * Удалить этап у цели.
+     */
     @DeleteMapping("/{goalId}/tasks/{stageId}")
     public ResponseEntity<ApiResponse<String>> deleteStage(
             @PathVariable Long goalId,
@@ -155,11 +179,13 @@ public class GoalController {
             HttpServletRequest req) {
         String token = tokenFrom(req);
         log.info("HTTP DELETE /api/v1/goals/{}/tasks/{} deleteStage", goalId, stageId);
-        String message = stageService.DeleteStage(token, goalId, stageId);
+        String message = stageService.deleteStage(token, goalId, stageId);
         return ResponseEntity.ok(ApiResponse.success(message));
     }
 
-    /** Заглушка: разложение цели на этапы через ИИ. Пока просто 202 и "processing". */
+    /**
+     * Заглушка: разложение цели на этапы через ИИ. Пока просто 202 и "processing".
+     */
     @PostMapping("/{id}/ai-decompose")
     public ResponseEntity<ApiResponse<Map<String, String>>> aiDecompose(@PathVariable Long id, HttpServletRequest req) {
         log.info("HTTP POST /api/v1/goals/{}/ai-decompose", id);
@@ -167,10 +193,67 @@ public class GoalController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.success(stub));
     }
 
-    @GetMapping("/searchForParameters")
-    public ResponseEntity<ApiResponse<Page<Goal>>> searchForParameters(@ModelAttribute  ParametersForSearching parameters, HttpServletRequest request){
-       String token  = tokenFrom(request);
-        Page<Goal> pages = goalService.findAllByParameters(token ,parameters);
-        return  ResponseEntity.ok(ApiResponse.success(pages));
+    @GetMapping("/goals")
+    public ResponseEntity<ApiResponse<Page<Goal>>> searchForParameters(@ModelAttribute ParametersForSearching parameters, HttpServletRequest request) {
+        String token = tokenFrom(request);
+        Page<Goal> pages = goalService.findAllByParameters(token, parameters);
+        return ResponseEntity.ok(ApiResponse.success(pages));
     }
+
+    @GetMapping("/{goalId}/stages")
+    public ResponseEntity<ApiResponse<Page<Stage>>> allstages(HttpServletRequest request,  @ModelAttribute  Allstages allstages ){
+        String token = tokenFrom(request);
+        Page<Stage> stages = stageService.getStagesByGoal(token,allstages);
+        return ResponseEntity.ok(ApiResponse.success(stages));
+    }
+
+
+    @GetMapping("{goalId}/tasks/{stageId}")
+    public ResponseEntity<ApiResponse<Stage>> onlyOneStage(HttpServletRequest request, @PathVariable Long goalId, @PathVariable Long stageId){
+        String token =  tokenFrom(request);
+        Stage stage = stageService.oneStage(token,stageId);
+        return ResponseEntity.ok(ApiResponse.success(stage));
+    }
+
+    // ==================== Results ====================
+
+    @GetMapping("/{goalId}/results")
+    public ResponseEntity<ApiResponse<List<Result>>> getResults(@PathVariable Long goalId, HttpServletRequest req) {
+        String token = tokenFrom(req);
+        log.info("HTTP GET /api/v1/goals/{}/results", goalId);
+        List<Result> results = resultService.allresults(token, goalId);
+        return ResponseEntity.ok(ApiResponse.success(results));
+    }
+
+    @PostMapping("/{goalId}/results")
+    public ResponseEntity<ApiResponse<Result>> createResult(@PathVariable Long goalId,
+                                                             @RequestBody ResultCreateRequest request,
+                                                             HttpServletRequest req) {
+        String token = tokenFrom(req);
+        log.info("HTTP POST /api/v1/goals/{}/results", goalId);
+        Result result = resultService.CreateResult(token, request, goalId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(result));
+    }
+
+    @PatchMapping("/{goalId}/results/{resultId}")
+    public ResponseEntity<ApiResponse<Result>> updateResult(@PathVariable Long goalId,
+                                                             @PathVariable Long resultId,
+                                                             @RequestBody ResultCreateRequest request,
+                                                             HttpServletRequest req) {
+        String token = tokenFrom(req);
+        log.info("HTTP PATCH /api/v1/goals/{}/results/{}", goalId, resultId);
+        Result result = resultService.updateResult(token, request, goalId, resultId);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @DeleteMapping("/{goalId}/results/{resultId}")
+    public ResponseEntity<Void> deleteResult(@PathVariable Long goalId,
+                                              @PathVariable Long resultId,
+                                              HttpServletRequest req) {
+        String token = tokenFrom(req);
+        log.info("HTTP DELETE /api/v1/goals/{}/results/{}", goalId, resultId);
+        resultService.deleteResult(token, goalId, resultId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

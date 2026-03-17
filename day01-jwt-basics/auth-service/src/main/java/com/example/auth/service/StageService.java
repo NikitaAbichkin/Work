@@ -1,17 +1,22 @@
 package com.example.auth.service;
 
+import com.example.auth.dto.Allstages;
 import com.example.auth.dto.UpdatedStage;
 import com.example.auth.exception.GoalNotFoundException;
 import com.example.auth.exception.StageNotFoundException;
 import com.example.auth.exception.UserNotFoundException;
 import com.example.auth.model.Goal;
+import com.example.auth.model.Stage;
 import com.example.auth.model.User;
 import com.example.auth.repository.GoalRepository;
 import com.example.auth.repository.StageRepository;
-import com.example.auth.model.Stage;
 import com.example.auth.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -63,7 +68,8 @@ public class StageService {
 
         Stage saved = stageRepository.save(stage);
         log.info("Stage created successfully id={} goalId={} userId={}", saved.getId(), goalId, userId);
-
+        goal.recalculateProgress();
+        goalRepository.save(goal);
         return  saved;
     }
 
@@ -126,8 +132,8 @@ public class StageService {
         log.info("Stage updated successfully id={} goalId={} userId={}", saved.getId(), goalId, userId);
         return saved;
     }
-
-    public String DeleteStage (String token,Long goalId, Long stageid){
+    @Transactional
+    public String deleteStage (String token,Long goalId, Long stageid){
         Long userId = jwtService.extractId(token);
         log.info("Delete stage request for userId={} goalId={} stageId={}", userId, goalId, stageid);
         User user = userRepository.findById(userId)
@@ -149,6 +155,44 @@ public class StageService {
         stageRepository.delete(stage);
         log.info("Stage deleted successfully id={} goalId={} userId={}", stage.getId(), goalId, userId);
 
+        goal.recalculateProgress();
+        goalRepository.save(goal);
         return "Задача с id " + stage.getId() + " была удалена";
     }
-}
+    @Transactional
+    public Page <Stage >getStagesByGoal(String token , Allstages allstages) {
+        Pageable pageable = PageRequest.of(allstages.getStage(), allstages.getSize(), Sort.by("id"));
+        Long GoalId = allstages.getGoalId();
+        Long id = jwtService.extractId(token);
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException());
+
+        goalRepository.findByUserAndId(user, GoalId)
+                .orElseThrow(() -> new GoalNotFoundException(GoalId));
+
+        return stageRepository.findAllByGoal_Id(GoalId, pageable);
+
+
+        }
+        @Transactional
+    public Stage oneStage(String token, Long stageId){
+        Long userid = jwtService.extractId(token);
+        User user =  userRepository.findById(userid )
+                .orElseThrow(() -> {
+                    log.warn("Get stage failed");
+                    return new UserNotFoundException();
+                });
+        Stage stage = stageRepository.findById(stageId).orElseThrow(()->{
+            return  new StageNotFoundException(stageId);
+        });
+       Boolean isOurStage  =  stage.getGoal().getUser().getId().equals(userid)
+               ? true
+               : false;
+       if (!isOurStage){
+           throw  new StageNotFoundException(stageId);
+       }
+       return stage;
+
+    }
+    }

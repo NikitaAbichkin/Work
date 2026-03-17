@@ -1,5 +1,6 @@
 package com.example.auth.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.sql.Time;
@@ -31,6 +32,7 @@ public class Goal {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY) // не подтягивай юзера пока не попросят
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -68,6 +70,9 @@ public class Goal {
 
     @OneToMany(mappedBy = "goal", fetch = FetchType.LAZY,  cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Stage> stages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "goal", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Result> results = new ArrayList<>();
 
     @Column( name  ="progress")
     private Integer progress = 0 ;
@@ -195,6 +200,10 @@ public class Goal {
     public void setDaily_time_minutes(Integer daily_time_minutes) {
         this.daily_time_minutes = daily_time_minutes;
     }
+    public List<Result> getResults() {
+        return results;
+    }
+
     public void setStages(List<Stage> stages) {
         this.stages.clear();
         if (stages != null){

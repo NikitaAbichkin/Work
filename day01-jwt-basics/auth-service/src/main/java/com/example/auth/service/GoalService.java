@@ -2,6 +2,7 @@ package com.example.auth.service;
 
 import com.example.auth.dto.CreateGoalRequest;
 import com.example.auth.dto.ParametersForSearching;
+import com.example.auth.dto.StageCreateRequest;
 import com.example.auth.dto.UpdatedGoalRequest;
 import com.example.auth.exception.GoalNotFoundException;
 import com.example.auth.exception.UserNotFoundException;
@@ -9,17 +10,17 @@ import com.example.auth.model.Goal;
 import com.example.auth.model.Stage;
 import com.example.auth.model.User;
 import com.example.auth.repository.GoalRepository;
-import com.example.auth.repository.StageRepository;
 import com.example.auth.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.springframework.data.domain.Pageable;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -32,7 +33,6 @@ public class GoalService {
         this.goalRepository = goalRepository;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
-
     }
 
     public Page<Goal> getUserGoals(String token, int page, int size) {
@@ -43,8 +43,7 @@ public class GoalService {
         Pageable pageable = PageRequest.of(page,size,Sort.by("id"));
 
         return  goalRepository.findByUserId(userId, pageable);
-
-         }
+    }
 
     @Transactional(readOnly = true)
     public Goal getGoalWithStages(String token, Long goalid){
@@ -99,8 +98,6 @@ public class GoalService {
                 }
             }
         }
-        
-        
         
 
         Long userId = jwtService.extractId(token);
@@ -182,8 +179,41 @@ public class GoalService {
             }
             goal.setDeadline(request.getDeadline());
         }
+
         if (request.getStages()!=null){
-          goal.setStages(request.getStages());
+            List<StageCreateRequest> stages = request.getStages();
+            List<Stage> stagesFinal = new ArrayList<>();
+            for (StageCreateRequest s : stages){
+                Stage stage = new Stage();
+                stage.setTitle(s.getTitle());
+                stage.setDescription(s.getDescription());
+                if (s.getPriority() != null) {
+                    try {
+                        stage.setPriority(Stage.PriorityStage.valueOf(s.getPriority().toUpperCase()));
+                    }
+                    catch (Exception e){
+                         throw  new IllegalArgumentException("Невалидный приоритет ");
+                    }
+                }
+                if (s.getStatus()!=null){
+                    try {
+                        stage.setStatus(Stage.StatusPriority.valueOf(s.getStatus().toUpperCase()));
+
+                    }
+                    catch (Exception e){
+                        throw  new IllegalArgumentException("Невалидный cтатус ");
+                    }
+
+                }
+
+
+                stage.setEstimatedMinutes(s.getEstimatedMinutes());
+                stage.setDeadline(s.getDeadline());
+                stage.setSortOrder(s.getSortOrder()!=null? s.getSortOrder(): null);
+                stage.setStartsAt(s.getStartsAt());
+                stagesFinal.add(stage);
+            }
+            goal.setStages(stagesFinal);
         }
         goal.recalculateProgress();
 
@@ -211,25 +241,59 @@ public class GoalService {
         return  ("Goal with ID:"+goal.getId()+" was deleted" );
     }
 
-    public Page<Goal> findAllByParameters(String token, ParametersForSearching parameters) {
+    public Page<Goal>  findAllByParameters(String token, ParametersForSearching parameters) {
         Long userId = jwtService.extractId(token);
-        Goal.GoalStatus status = parameters.getStatus() != null
-                ? Goal.GoalStatus.valueOf(parameters.getStatus().toUpperCase())
-                : null;
-
-        Goal.PriorityStatus priority = parameters.getPriority() != null
-                ? Goal.PriorityStatus.valueOf(parameters.getPriority().toUpperCase())
-                : null;
 
 
-        Pageable pageable = PageRequest.of(parameters.getPage(), parameters.getSize(), Sort.by("id"));
-        return goalRepository.findByFilters(userId, status, priority, pageable);
+        String sortField = parameters.getSort() != null ? parameters.getSort() : "createdAt";
+
+        Sort.Direction direction;
+
+        if ("asc".equalsIgnoreCase(parameters.getOrder())){
+            direction = Sort.Direction.ASC;
+        }
+        else {
+            direction = Sort.Direction.DESC;
+        }
+
+        List<Goal.GoalStatus> statuses = null;
+        if ( parameters.getStatus()!= null){
+            statuses = new ArrayList<>();
+            for (String s: parameters.getStatus().split(",")){
+                try {
+                    statuses.add(Goal.GoalStatus.valueOf(s.trim().toUpperCase()));
+                }
+                catch (Exception e){
+                     throw  new IllegalArgumentException("Невалидный статус ");
+                }
+
+            }
+        }
+        List <Goal.PriorityStatus> prioritets = null;
+        if (parameters.getPriority()!=null) {
+             prioritets = new ArrayList<>();
+             for (String s: parameters.getPriority().split(",")){
+                 try {
+                     prioritets.add(Goal.PriorityStatus.valueOf(s.toUpperCase()));
+                 }
+                 catch (Exception e){
+                    throw  new IllegalArgumentException ("Невалидный приоритет ");
+                 }
+
+            }
+        }
+
+
+
+
+
+
+
+
+
+        Pageable pageable = PageRequest.of(parameters.getPage(), parameters.getSize(), Sort.by(direction,sortField));
+        return goalRepository.findByFilters(userId,statuses,prioritets,pageable);
 
     }
-
-
-
-
-
 
 }

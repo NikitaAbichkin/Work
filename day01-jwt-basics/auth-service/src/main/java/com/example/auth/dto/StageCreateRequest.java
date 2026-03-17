@@ -22,4 +22,5 @@ public class StageCreateRequest {
     private LocalDate deadline;
     private LocalDate startsAt;
     private Integer sortOrder;
+    private String status;
 }

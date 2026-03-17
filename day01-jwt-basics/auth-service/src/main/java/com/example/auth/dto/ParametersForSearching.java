@@ -13,6 +13,8 @@ import lombok.Setter;
 public class ParametersForSearching {
     private String status;
     private String priority;
+    private  String sort;
+    private  String order;
     int page;
     int size;
 }

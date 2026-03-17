@@ -32,7 +32,7 @@ public class UpdatedGoalRequest {
 
     private String title;
 
-    private List<Stage> stages;
+    private List<StageCreateRequest> stages;
 
 }
 

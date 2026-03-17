@@ -3,10 +3,12 @@ package com.example.auth.exception;
 import com.example.auth.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import org.springframework.http.HttpStatus;
+import java.util.stream.Collectors;
 
 
 @RestControllerAdvice
@@ -83,6 +85,23 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("RATE_LIMIT_EXCEEDED", ex.getMessage()));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("IllegalArgumentException handled", ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("BAD_REQUEST", ex.getMessage()));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        log.warn("MethodArgumentNotValidException handled: {}", message);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("VALIDATION_ERROR", message));
+    }
+
     @ExceptionHandler(GoalNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleGoalNotFound(GoalNotFoundException ex) {
         log.warn("GoalNotFoundException handled", ex);
@@ -108,7 +127,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {
         log.error("Unhandled RuntimeException", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("INTERNAL_ERROR", ex.getMessage()));
+                .body(ApiResponse.error("INTERNAL_ERROR", "Внутренняя ошибка сервера"));
     }
 
 
