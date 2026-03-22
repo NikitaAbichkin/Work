@@ -29,7 +29,7 @@ public class Stage {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "goal_id", nullable = false)
+    @JoinColumn(name =  "goal_id",nullable = false)
     private Goal goal;
 
     @Column(nullable = false)
@@ -208,6 +208,7 @@ public class Stage {
             }
         } else {
             this.isCompleted = false;
+            this.progress = 0;
             this.completedAt = null;
         }
     }

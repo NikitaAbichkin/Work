@@ -10,7 +10,9 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+
 public class ParametersForSearching {
+
     private String status;
     private String priority;
     private  String sort;

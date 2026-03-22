@@ -30,10 +30,13 @@ public class CreateGoalRequest {
 
     @JsonProperty("daily_time_minutes")
     private Integer daily_time_minutes;
+
     @JsonProperty("title")
     private String title;
+
     @JsonProperty("description")
     private String description;
+
     @JsonProperty("stages")
     private List<StageCreateRequest> stages;
 

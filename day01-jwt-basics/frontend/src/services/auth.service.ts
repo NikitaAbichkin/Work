@@ -5,7 +5,6 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
-  ProfileResponse,
 } from '../types/auth';
 
 export const authService: AuthService = {
@@ -19,11 +18,8 @@ export const authService: AuthService = {
     return response.data.data;
   },
 
-  async getProfile(token: string): Promise<ProfileResponse> {
-    const response = await api.get('/api/v1/auth/profile', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data.data;
+  async logout(refreshToken: string): Promise<void> {
+    await api.post('/api/v1/auth/logout', { refreshToken });
   },
 
   async confirm(username: string, code: string): Promise<void> {

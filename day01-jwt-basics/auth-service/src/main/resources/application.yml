@@ -1,3 +1,7 @@
+server:
+  port: 8080
+  address: 0.0.0.0
+
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/jwt_auth}

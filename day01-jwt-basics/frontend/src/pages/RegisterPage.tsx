@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { service } from '../services';
 import '../styles/forms.css';
 
@@ -83,7 +83,11 @@ export default function RegisterPage() {
       <div className="form-card">
         {step === 'register' ? (
           <>
-            <h2>Регистрация</h2>
+            <div className="form-intro">
+              <span className="form-kicker">Шаг 1</span>
+              <h2>Создание аккаунта</h2>
+              <p>Сначала создаёшь пользователя, затем отдельным шагом подтверждаешь email кодом.</p>
+            </div>
 
             {error && <div className="form-error">{error}</div>}
             {success && <div className="form-success">{success} — <Link to="/login">Войти</Link></div>}
@@ -136,7 +140,11 @@ export default function RegisterPage() {
           </>
         ) : (
           <>
-            <h2>Подтверждение email</h2>
+            <div className="form-intro">
+              <span className="form-kicker">Шаг 1.1</span>
+              <h2>Подтверждение email</h2>
+              <p>Код подтверждения отправлен на адрес, который ты указал при регистрации.</p>
+            </div>
             <p style={{ marginBottom: '16px', color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
               Код отправлен на <strong>{email}</strong>
             </p>

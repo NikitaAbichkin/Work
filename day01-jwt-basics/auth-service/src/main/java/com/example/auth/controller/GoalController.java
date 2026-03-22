@@ -191,15 +191,15 @@ public class GoalController {
      * Заглушка: разложение цели на этапы через ИИ. Пока просто 202 и "processing".
      */
     @PostMapping("/ai-decompose")
-    public ResponseEntity<ApiResponse<AIPlanResponce>> aiDecompose(HttpServletRequest httpServletRequest, @RequestBody AiPlanRequest request , @PathVariable Long id ) {
+    public ResponseEntity<ApiResponse<AIPlanResponce>> aiDecompose(HttpServletRequest httpServletRequest, @RequestBody AiPlanRequest request) {
         String token = tokenFrom(httpServletRequest);
-        log.info("HTTP POST /api/v1/goals/{}/ai-decompose", id);
-        AIPlanResponce aiPlanResponce = aiPlanService.generatePlan(token,request.getPrompt());
+        log.info("HTTP POST /api/v1/goals/ai-decompose");
+        AIPlanResponce aiPlanResponce = aiPlanService.generatePlan(token, request.getPrompt());
         return  ResponseEntity.ok(ApiResponse.success(aiPlanResponce));
 
     }
     @PostMapping("/ai-help")
-    public ResponseEntity<ApiResponse<AIPlanResponce>> aiHelp( HttpServletRequest httpServletRequest , @RequestBody AIHelpGoalReqest request,@PathVariable Long goalId){
+    public ResponseEntity<ApiResponse<AIPlanResponce>> aiHelp(HttpServletRequest httpServletRequest, @RequestBody AIHelpGoalReqest request) {
         String token = tokenFrom(httpServletRequest);
         AIPlanResponce aiPlanResponce = aiPlanService.HelpWithGoal(token,request.getPromt(), request.getGoalId());
         return ResponseEntity.ok(ApiResponse.success(aiPlanResponce));

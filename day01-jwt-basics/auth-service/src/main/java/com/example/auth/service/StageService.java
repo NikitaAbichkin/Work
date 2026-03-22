@@ -152,7 +152,9 @@ public class StageService {
                     return new StageNotFoundException(stageid);
                 });
 
-        stageRepository.delete(stage);
+        goal.getStages().remove(stage);
+        goal.recalculateProgress();
+        goalRepository.save(goal);
         log.info("Stage deleted successfully id={} goalId={} userId={}", stage.getId(), goalId, userId);
 
         goal.recalculateProgress();

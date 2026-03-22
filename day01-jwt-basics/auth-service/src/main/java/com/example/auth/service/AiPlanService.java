@@ -20,6 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -59,32 +62,48 @@ public class AiPlanService {
     public  AIPlanResponce generatePlan(String token,String promt){
         Long userId = jwtService.extractId(token);
         User user = userRepository.findById(userId).orElseThrow(()-> new IllegalArgumentException("нет такого пользователя"));
+        String s = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
-        String systemPrompt = """
-          Ты планировщик целей. Пользователь описывает что хочет достичь.
-          Сгенерируй цель и список задач.                                                                                                          
-          Верни ТОЛЬКО JSON, без пояснений, в формате:
-          {                                                                                                                                        
-            "title": "...",
-            "description": "...",
-            "priority": "LOW | MEDIUM | HIGH",
-            "start_date": "YYYY-MM-DD",
-            "deadline": "YYYY-MM-DD",
-            "daily_time_minutes": 60,
-            "stages": [
-              {
-                "title": "...",
-                "description": "...",
-                "priority": "LOW | MEDIUM | HIGH",
-                "estimatedMinutes": 60,
-                "deadline": "YYYY-MM-DD",
-                "startsAt": "YYYY-MM-DD",
-                "sortOrder": 1,
-                "status": "IN_PROGRESS"
-              }
-            ]
-          }
-          """;
+        String systemPrompt = String.format("""
+        Пиши как опытный наставник (ментор). 
+        
+        ПРАВИЛА РАБОТЫ С ДАТАМИ (КРИТИЧЕСКИ ВАЖНО):
+        Адекватно оценивай реальный масштаб цели. 
+        - Если цель решается за пару часов (например, "сварить кофе", "написать класс", "настроить докер"), ставь для ВСЕХ задач (stages) ОДНУ И ТУ ЖЕ дату (совпадающую с текущей).
+        - Растягивай задачи на разные дни ТОЛЬКО для действительно крупных проектов, требующих длительного времени.
+        
+        ТРЕБОВАНИЯ К ПОЛЮ description В stages:
+        Не пиши вводные слова, "суть" или "критерии успеха". Сосредоточься ТОЛЬКО на глубокой проработке самих действий.
+        Для каждой задачи выдай подробный алгоритм выполнения с акцентом на нюансы: 
+        - Как именно это сделать лучше всего? 
+        - На какие особенности обратить внимание?
+        - Если это техническая задача, упомяни конкретные инструменты или методы.
+        Текст должен быть плотным, полезным и сразу переходить к делу. Используй перенос строки (\\n) для разделения мыслей, чтобы текст хорошо читался.
+                                                                               
+        Верни ТОЛЬКО JSON, без пояснений, в формате:
+        {                                                                                                                                        
+          "title": "...",
+          "description": "...",
+          "priority": "LOW | MEDIUM | HIGH",
+          "start_date": "YYYY-MM-DD",
+          "deadline": "YYYY-MM-DD",
+          "daily_time_minutes": 60,
+          "stages": [
+            {
+              "title": "...",
+              "description": "...",
+              "priority": "LOW | MEDIUM | HIGH",
+              "estimatedMinutes": 60,
+              "deadline": "YYYY-MM-DD",
+              "startsAt": "YYYY-MM-DD",
+              "sortOrder": 1,
+              "status": "IN_PROGRESS"
+            }
+          ]
+        }
+        Текущая дата: %s
+        """, s);
 
 
         Map<String, Object> body = Map.of(
@@ -107,6 +126,7 @@ public class AiPlanService {
 
         JsonNode root = objectMapper.readTree(responceBody);
         String content = root.at("/choices/0/message/content").asText();
+        content = content.replaceAll("^```json\\s*", "").replaceAll("```\\s*$", "").trim();
         AIPlanResponce aiPlanResponce = objectMapper.readValue(content,AIPlanResponce.class);
 
 
@@ -122,11 +142,27 @@ public class AiPlanService {
         Goal goal = goalRepository.findByUserAndId(user,goalId).orElseThrow(()-> new IllegalArgumentException("нет такой цели "));
 
         String GoalString = objectMapper.writeValueAsString(goal);
+        String s = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
 
 
         String systemPrompt = String.format("""
-                Ты планировщик целей. Пользователь описывает что хочет достичь.
-                Сгенерируй цель и список задач.                                                                                                          
+                Пиши как опытный наставник (ментор). 
+                
+                ПРАВИЛА РАБОТЫ С ДАТАМИ (КРИТИЧЕСКИ ВАЖНО):
+                Адекватно оценивай реальный масштаб цели. 
+                - Если цель решается за пару часов (например, "сварить кофе", "написать класс", "настроить докер"), ставь для ВСЕХ задач (stages) ОДНУ И ТУ ЖЕ дату (совпадающую с текущей).
+                - Растягивай задачи на разные дни ТОЛЬКО для действительно крупных проектов, требующих длительного времени.
+                
+                ТРЕБОВАНИЯ К ПОЛЮ description В stages:
+                Не пиши вводные слова, "суть" или "критерии успеха". Сосредоточься ТОЛЬКО на глубокой проработке самих действий.
+                Для каждой задачи выдай подробный алгоритм выполнения с акцентом на нюансы: 
+                - Как именно это сделать лучше всего? 
+                - На какие особенности обратить внимание?
+                - Если это техническая задача, упомяни конкретные инструменты или методы.
+                Текст должен быть плотным, полезным и сразу переходить к делу. Используй перенос строки (\\n) для разделения мыслей, чтобы текст хорошо читался.
+                                              
                 Верни ТОЛЬКО JSON, без пояснений, в формате:
                 {                                                                                                                                        
                   "title": "...",
@@ -148,8 +184,9 @@ public class AiPlanService {
                     }
                   ]
                 }
+                Текущая дата: %s
                 текущая цель : %s
-                """,GoalString);
+                """,s,GoalString);
         Map<String, Object> body = Map.of(
                 "model", AI_MODEL,
                 "temperature", 0.7,
@@ -167,6 +204,7 @@ public class AiPlanService {
 
         JsonNode root = objectMapper.readTree(responceBody);
         String content = root.at("/choices/0/message/content").asText();
+        content = content.replaceAll("^```json\\s*", "").replaceAll("```\\s*$", "").trim();
         AIPlanResponce aiPlanResponce = objectMapper.readValue(content,AIPlanResponce.class);
 
         return aiPlanResponce;

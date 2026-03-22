@@ -12,7 +12,7 @@ import java.util.List;
 
 
 @Entity
-@Table(name = "goals")
+@Table(name = "goals") //даем название таблице в бд
 public class Goal {
 
     public enum GoalStatus {
@@ -67,9 +67,9 @@ public class Goal {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-
-    @OneToMany(mappedBy = "goal", fetch = FetchType.LAZY,  cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Stage> stages = new ArrayList<>();
+//    @Column(name = "stages")
+    @OneToMany(mappedBy = "goal", fetch = FetchType.LAZY, cascade  = CascadeType.ALL, orphanRemoval = true)
+    private  List<Stage> stages = new ArrayList<>();
 
     @OneToMany(mappedBy = "goal", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Result> results = new ArrayList<>();
@@ -113,6 +113,7 @@ public class Goal {
         for (Stage stage :stages){
             total += stage.getProgress();
         }
+
         this.progress = total/stages.size();
     }
 

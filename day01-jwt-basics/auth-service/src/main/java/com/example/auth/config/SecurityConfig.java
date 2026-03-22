@@ -29,6 +29,7 @@ public class SecurityConfig {
     public SecurityConfig(JwtAuthFilter jwtAuthFilter){
         this.jwtAuthFilter = jwtAuthFilter;
     }
+
     @Bean
     public    SecurityFilterChain securityFilterChain(HttpSecurity http)
     throws Exception {
@@ -51,8 +52,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
