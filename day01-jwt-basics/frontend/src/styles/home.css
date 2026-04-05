@@ -1,19 +1,69 @@
 .home-page {
-  max-width: 700px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: var(--space-2xl) var(--space-md);
+  padding: 56px var(--space-md) 72px;
+}
+
+.hero-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) auto;
+  gap: var(--space-xl);
+  align-items: start;
+  padding: 40px;
+  margin-bottom: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 32px;
+  background:
+    linear-gradient(135deg, rgba(255, 248, 235, 0.92), rgba(255, 255, 255, 0.7)),
+    rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(12px);
+}
+
+.hero-copy {
+  min-width: 0;
+}
+
+.hero-kicker,
+.panel-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 14px;
+  color: var(--color-warning);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .home-page h1 {
   color: var(--color-text);
-  font-size: 2rem;
-  margin: 0 0 var(--space-sm);
+  font-size: clamp(2.4rem, 6vw, 4.8rem);
+  line-height: 0.98;
+  max-width: 10ch;
+  margin: 0 0 var(--space-md);
 }
 
 .home-page .subtitle {
   color: var(--color-text-secondary);
   font-size: 1.1rem;
-  margin: 0 0 var(--space-xl);
+  max-width: 56ch;
+  margin: 0;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 0.85fr;
+  gap: 24px;
+}
+
+.home-panel {
+  padding: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 28px;
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
 }
 
 .home-steps {
@@ -26,22 +76,22 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-md);
-  padding: var(--space-md);
-  margin-bottom: var(--space-sm);
-  background: var(--color-surface);
+  padding: 18px 0;
+  margin-bottom: 0;
+  background: transparent;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  border-width: 0 0 1px;
 }
 
 .step-number {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-primary);
-  color: white;
+  background: rgba(15, 118, 110, 0.12);
+  color: var(--color-primary);
   border-radius: 50%;
   font-weight: 700;
   font-size: 0.875rem;
@@ -56,23 +106,25 @@
 .step-content p {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.92rem;
   line-height: 1.5;
 }
 
 .home-cta {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-md);
-  margin-top: var(--space-xl);
+  align-items: flex-start;
+  justify-self: end;
 }
 
 .home-cta a {
   display: inline-block;
-  padding: var(--space-sm) var(--space-lg);
-  border-radius: var(--radius);
+  padding: 14px 22px;
+  border-radius: 999px;
   text-decoration: none;
   font-weight: 600;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
 }
 
 .home-cta .cta-primary {
@@ -82,13 +134,63 @@
 
 .home-cta .cta-primary:hover {
   background: var(--color-primary-hover);
+  transform: translateY(-1px);
 }
 
 .home-cta .cta-secondary {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 
 .home-cta .cta-secondary:hover {
-  background: var(--color-border);
+  background: white;
+  transform: translateY(-1px);
+}
+
+.home-checklist ul {
+  list-style: none;
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+}
+
+.home-checklist li {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 900px) {
+  .hero-card,
+  .home-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-card {
+    padding: 28px;
+  }
+
+  .home-cta {
+    justify-self: start;
+  }
+
+  .home-page h1 {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-page {
+    padding-top: 28px;
+  }
+
+  .home-panel,
+  .hero-card {
+    border-radius: 24px;
+    padding: 22px;
+  }
 }

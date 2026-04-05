@@ -4,7 +4,6 @@ import type {
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
-  ProfileResponse,
 } from '../types/auth';
 
 // "База данных" в памяти
@@ -14,7 +13,7 @@ interface MockUser {
   password: string;
 }
 
-let users: MockUser[] = [];
+const users: MockUser[] = [];
 let nextId = 1;
 
 function delay(ms = 500): Promise<void> {
@@ -79,22 +78,23 @@ export const mockService: AuthService = {
     return {
       access_token: token,
       token_type: 'bearer',
+      refreshToken: `mock-refresh-${user.user_id}`,
     };
   },
 
-  async getProfile(token: string): Promise<ProfileResponse> {
-    await delay(300);
+  async logout(refreshToken: string): Promise<void> {
+    void refreshToken;
+    await delay(200);
+  },
 
-    // Декодируем фейковый токен для получения данных пользователя
-    try {
-      const parts = token.split('.');
-      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-      return {
-        username: payload.username,
-        user_id: payload.user_id,
-      };
-    } catch {
-      throw new Error('Недействительный токен');
-    }
+  async confirm(username: string, code: string): Promise<void> {
+    void username;
+    void code;
+    await delay(300);
+  },
+
+  async resend(email: string): Promise<void> {
+    void email;
+    await delay(300);
   },
 };

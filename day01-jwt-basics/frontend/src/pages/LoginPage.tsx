@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import '../styles/forms.css';
 
 export default function LoginPage() {
@@ -11,11 +11,11 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Если уже авторизован — редирект
-  if (isAuthenticated) {
-    navigate('/dashboard', { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -41,7 +41,11 @@ export default function LoginPage() {
   return (
     <div className="form-page">
       <div className="form-card">
-        <h2>Вход</h2>
+        <div className="form-intro">
+          <span className="form-kicker">Шаг 2</span>
+          <h2>Вход в аккаунт</h2>
+          <p>После логина откроется панель, где можно сразу проверить токен и защищённый профиль.</p>
+        </div>
 
         {error && <div className="form-error">{error}</div>}
 

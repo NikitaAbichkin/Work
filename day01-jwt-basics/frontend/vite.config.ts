@@ -30,15 +30,19 @@ function loadCustomEnv(): Record<string, string> {
 }
 
 const customEnv = loadCustomEnv()
+const viteApiUrl = process.env.VITE_API_URL || customEnv.VITE_API_URL || 'http://localhost:8000/api'
+const viteUseMock = process.env.VITE_USE_MOCK || customEnv.VITE_USE_MOCK || 'true'
+const vitePort = process.env.VITE_PORT || customEnv.VITE_PORT || '5173'
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: parseInt(customEnv.VITE_PORT || '5173', 10),
+    host: true,
+    port: parseInt(vitePort, 10),
   },
   define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify(customEnv.VITE_API_URL || 'http://localhost:8000/api'),
-    'import.meta.env.VITE_USE_MOCK': JSON.stringify(customEnv.VITE_USE_MOCK || 'true'),
-    'import.meta.env.VITE_PORT': JSON.stringify(customEnv.VITE_PORT || '5173'),
+    'import.meta.env.VITE_API_URL': JSON.stringify(viteApiUrl),
+    'import.meta.env.VITE_USE_MOCK': JSON.stringify(viteUseMock),
+    'import.meta.env.VITE_PORT': JSON.stringify(vitePort),
   },
 })

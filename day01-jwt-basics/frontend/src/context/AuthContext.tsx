@@ -1,47 +1,59 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { User, LoginRequest, RegisterRequest, RegisterResponse } from '../types/auth';
 import { service } from '../services';
-import { getToken, setToken, removeToken, decodeToken, isTokenExpired } from '../utils/token';
+import {
+  getRefreshToken,
+  getToken,
+  setToken,
+  setRefreshToken,
+  removeToken,
+  removeRefreshToken,
+  decodeToken,
+  isTokenExpired,
+} from '../utils/token';
+import { AuthContext } from './auth-context';
 
-interface AuthContextType {
+interface InitialAuthState {
   user: User | null;
   token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (data: LoginRequest) => Promise<void>;
-  register: (data: RegisterRequest) => Promise<RegisterResponse>;
-  logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+function getInitialAuthState(): InitialAuthState {
+  const savedToken = getToken();
+  if (!savedToken) {
+    return { user: null, token: null };
+  }
+
+  if (isTokenExpired(savedToken)) {
+    removeToken();
+    return { user: null, token: null };
+  }
+
+  const payload = decodeToken(savedToken);
+  if (!payload) {
+    removeToken();
+    return { user: null, token: null };
+  }
+
+  return {
+    token: savedToken,
+    user: { username: payload.username, user_id: payload.user_id },
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setTokenState] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // При монтировании: проверяем localStorage на наличие токена
-  useEffect(() => {
-    const savedToken = getToken();
-    if (savedToken && !isTokenExpired(savedToken)) {
-      const payload = decodeToken(savedToken);
-      if (payload) {
-        setTokenState(savedToken);
-        setUser({ username: payload.username, user_id: payload.user_id });
-      } else {
-        removeToken();
-      }
-    } else if (savedToken) {
-      // Токен есть, но истёк
-      removeToken();
-    }
-    setIsLoading(false);
-  }, []);
+  const initialState = getInitialAuthState();
+  const [user, setUser] = useState<User | null>(initialState.user);
+  const [token, setTokenState] = useState<string | null>(initialState.token);
+  const [isLoading] = useState(false);
 
   const login = async (data: LoginRequest): Promise<void> => {
     const response = await service.login(data);
     const newToken = response.access_token;
     setToken(newToken);
+    if (response.refreshToken) {
+      setRefreshToken(response.refreshToken);
+    }
     setTokenState(newToken);
 
     const payload = decodeToken(newToken);
@@ -54,8 +66,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return service.register(data);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      try {
+        await service.logout(refreshToken);
+      } catch {
+        // Локально выходим даже если серверный logout не ответил.
+      }
+    }
+
     removeToken();
+    removeRefreshToken();
     setTokenState(null);
     setUser(null);
   };
@@ -69,12 +91,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth должен использоваться внутри AuthProvider');
-  }
-  return context;
 }

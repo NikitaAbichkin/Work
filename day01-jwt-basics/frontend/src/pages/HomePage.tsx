@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import '../styles/home.css';
 
 export default function HomePage() {
@@ -7,67 +7,84 @@ export default function HomePage() {
 
   return (
     <div className="home-page">
-      <h1>JWT Аутентификация — Демо</h1>
-      <p className="subtitle">
-        Узнай, как JSON Web Tokens работают в реальном фронтенд-приложении
-      </p>
+      <section className="hero-card">
+        <div className="hero-copy">
+          <span className="hero-kicker">JWT flow without backend edits</span>
+          <h1>Пользовательский сценарий для проверки auth и целей</h1>
+          <p className="subtitle">
+            Зарегистрируйся, подтверди почту, войди, проверь защищённый профиль и пройди
+            сценарий с целями так, как это увидит обычный пользователь.
+          </p>
+        </div>
 
-      <ol className="home-steps">
-        <li>
-          <span className="step-number">1</span>
-          <div className="step-content">
-            <h3>Регистрация</h3>
-            <p>Создай аккаунт с именем пользователя и паролем. Сервер сохраняет твои данные.</p>
-          </div>
-        </li>
-        <li>
-          <span className="step-number">2</span>
-          <div className="step-content">
-            <h3>Вход</h3>
-            <p>
-              Отправь данные на сервер. Он вернёт JWT-токен с информацией о пользователе,
-              подписанный секретным ключом.
-            </p>
-          </div>
-        </li>
-        <li>
-          <span className="step-number">3</span>
-          <div className="step-content">
-            <h3>Хранение токена</h3>
-            <p>
-              Токен сохраняется в localStorage. Это base64-кодированная JSON-строка с частями:
-              header, payload и signature.
-            </p>
-          </div>
-        </li>
-        <li>
-          <span className="step-number">4</span>
-          <div className="step-content">
-            <h3>Защищённые маршруты</h3>
-            <p>
-              Каждый API-запрос включает токен в заголовке Authorization. Сервер проверяет
-              подпись перед тем, как дать доступ.
-            </p>
-          </div>
-        </li>
-      </ol>
+        <div className="home-cta">
+          {isAuthenticated ? (
+            <>
+              <Link to="/dashboard" className="cta-primary">
+                Открыть панель
+              </Link>
+              <Link to="/goals" className="cta-secondary">
+                Перейти к целям
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/register" className="cta-primary">
+                Создать аккаунт
+              </Link>
+              <Link to="/login" className="cta-secondary">
+                Уже есть вход
+              </Link>
+            </>
+          )}
+        </div>
+      </section>
 
-      <div className="home-cta">
-        {isAuthenticated ? (
-          <Link to="/dashboard" className="cta-primary">
-            Перейти в панель
-          </Link>
-        ) : (
-          <>
-            <Link to="/register" className="cta-primary">
-              Начать
-            </Link>
-            <Link to="/login" className="cta-secondary">
-              Уже есть аккаунт
-            </Link>
-          </>
-        )}
-      </div>
+      <section className="home-grid">
+        <article className="home-panel">
+          <p className="panel-eyebrow">Что проверить</p>
+          <ol className="home-steps">
+            <li>
+              <span className="step-number">1</span>
+              <div className="step-content">
+                <h3>Регистрация и подтверждение</h3>
+                <p>Фронт создаёт пользователя, затем отправляет код подтверждения на отдельном шаге.</p>
+              </div>
+            </li>
+            <li>
+              <span className="step-number">2</span>
+              <div className="step-content">
+                <h3>Логин и сессия</h3>
+                <p>После входа токен сохраняется, а защищённые страницы открываются без ручных действий.</p>
+              </div>
+            </li>
+            <li>
+              <span className="step-number">3</span>
+              <div className="step-content">
+                <h3>Защищённый запрос</h3>
+                <p>В панели видно, отвечает ли профильный эндпоинт с `Authorization: Bearer ...`.</p>
+              </div>
+            </li>
+            <li>
+              <span className="step-number">4</span>
+              <div className="step-content">
+                <h3>Работа с целями</h3>
+                <p>Создай цель, открой детали, добавь задачи и результат, чтобы проверить прикладной flow.</p>
+              </div>
+            </li>
+          </ol>
+        </article>
+
+        <aside className="home-panel home-checklist">
+          <p className="panel-eyebrow">Мини-чеклист</p>
+          <ul>
+            <li>Маршруты `/login`, `/register`, `/dashboard`, `/goals` связаны между собой.</li>
+            <li>После перезагрузки сессия восстанавливается из `localStorage`, если токен живой.</li>
+            <li>При `401` фронт чистит токен и отправляет пользователя обратно на логин.</li>
+            <li>Верхний бар показывает текущий режим: `Mock` или реальный `API`.</li>
+          </ul>
+        </aside>
+      </section>
     </div>
   );
 }

@@ -1,14 +1,13 @@
 package com.example.auth.dto;
 
-import ch.qos.logback.core.joran.action.PreconditionValidator;
 import com.example.auth.model.Stage;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
-import org.springframework.boot.autoconfigure.info.ProjectInfoProperties;
 
-import java.beans.PropertyVetoException;
-import java.util.ArrayList;
+import java.sql.Time;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -17,13 +16,23 @@ import java.util.List;
 public class UpdatedGoalRequest {
     private  Long goalId ;
 
-    private String description = null;
+    @JsonProperty("priority")
+    private String priority;
 
+    @JsonProperty("start_date")
+    private LocalDate startdate;
 
-    private String title = null;
+    @JsonProperty("deadline")
+    private LocalDate deadline;
 
+    @JsonProperty("daily_time_minutes")
+    private Integer daily_time_minutes;
 
-    private List<Stage> stages = null;
+    private String description;
+
+    private String title;
+
+    private List<StageCreateRequest> stages;
 
 }
 

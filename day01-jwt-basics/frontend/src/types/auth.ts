@@ -6,11 +6,13 @@ export interface LoginRequest {
 export interface RegisterRequest {
   username: string;
   password: string;
+  email: string;
 }
 
 export interface LoginResponse {
   access_token: string;
   token_type: string;
+  refreshToken?: string;
 }
 
 export interface RegisterResponse {
@@ -18,9 +20,9 @@ export interface RegisterResponse {
   message: string;
 }
 
-export interface ProfileResponse {
-  username: string;
-  user_id: number;
+export interface ProtectedStatusResponse {
+  totalGoals: number;
+  hasGoals: boolean;
 }
 
 export interface TokenPayload {
@@ -45,5 +47,7 @@ export interface AuthState {
 export interface AuthService {
   login(data: LoginRequest): Promise<LoginResponse>;
   register(data: RegisterRequest): Promise<RegisterResponse>;
-  getProfile(token: string): Promise<ProfileResponse>;
+  logout(refreshToken: string): Promise<void>;
+  confirm(username: string, code: string): Promise<void>;
+  resend(email: string): Promise<void>;
 }

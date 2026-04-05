@@ -1,24 +1,24 @@
 :root {
-  --color-primary: #4f46e5;
-  --color-primary-hover: #4338ca;
-  --color-primary-light: #e0e7ff;
-  --color-success: #059669;
-  --color-success-bg: #d1fae5;
-  --color-error: #dc2626;
+  --color-primary: #0f766e;
+  --color-primary-hover: #115e59;
+  --color-primary-light: #ccfbf1;
+  --color-success: #166534;
+  --color-success-bg: #dcfce7;
+  --color-error: #b91c1c;
   --color-error-bg: #fee2e2;
-  --color-warning: #d97706;
+  --color-warning: #b45309;
   --color-warning-bg: #fef3c7;
-  --color-bg: #f8fafc;
-  --color-surface: #ffffff;
-  --color-text: #1e293b;
-  --color-text-secondary: #64748b;
-  --color-border: #e2e8f0;
-  --color-mock-banner: #f59e0b;
+  --color-bg: #f4f1ea;
+  --color-surface: rgba(255, 255, 255, 0.78);
+  --color-surface-strong: #fffdf9;
+  --color-text: #18222c;
+  --color-text-secondary: #5f6b76;
+  --color-border: rgba(24, 34, 44, 0.08);
 
-  --radius: 8px;
-  --radius-lg: 12px;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --radius: 14px;
+  --radius-lg: 24px;
+  --shadow: 0 18px 40px rgba(24, 34, 44, 0.08);
+  --shadow-lg: 0 24px 60px rgba(24, 34, 44, 0.12);
 
   --space-xs: 4px;
   --space-sm: 8px;
@@ -27,5 +27,5 @@
   --space-xl: 32px;
   --space-2xl: 48px;
 
-  --font-mono: 'Courier New', Courier, monospace;
+  --font-mono: 'SFMono-Regular', 'Menlo', 'Monaco', monospace;
 }
