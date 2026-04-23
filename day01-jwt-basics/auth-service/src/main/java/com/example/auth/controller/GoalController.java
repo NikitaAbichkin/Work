@@ -224,7 +224,7 @@ public class GoalController {
     @GetMapping("{goalId}/tasks/{stageId}")
     public ResponseEntity<ApiResponse<Stage>> onlyOneStage(HttpServletRequest request, @PathVariable Long goalId, @PathVariable Long stageId){
         String token =  tokenFrom(request);
-        Stage stage = stageService.oneStage(token,stageId);
+        Stage stage = stageService.oneStage(token,stageId, goalId);
         return ResponseEntity.ok(ApiResponse.success(stage));
     }
 

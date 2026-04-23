@@ -177,7 +177,11 @@ public class Stage {
     }
 
     public void setProgress(Integer progress) {
-        this.progress = progress == null ? 0 : progress;
+        int normalizedProgress = progress == null ? 0 : progress;
+        if (normalizedProgress != 0 && normalizedProgress != 100) {
+            throw new IllegalArgumentException("Прогресс задачи может быть только 0 или 100");
+        }
+        this.progress = normalizedProgress;
         this.isCompleted = (this.progress == 100);
         if (this.isCompleted && this.completedAt == null) {
             this.completedAt = LocalDateTime.now();
@@ -249,4 +253,3 @@ public class Stage {
     }
 
 }
-

@@ -178,7 +178,7 @@ public class StageService {
 
         }
         @Transactional
-    public Stage oneStage(String token, Long stageId){
+    public Stage oneStage(String token, Long stageId, Long GoalId){
         Long userid = jwtService.extractId(token);
         User user =  userRepository.findById(userid )
                 .orElseThrow(() -> {
@@ -188,7 +188,7 @@ public class StageService {
         Stage stage = stageRepository.findById(stageId).orElseThrow(()->{
             return  new StageNotFoundException(stageId);
         });
-       Boolean isOurStage  =  stage.getGoal().getUser().getId().equals(userid)
+       Boolean isOurStage  =  stage.getGoal().getUser().getId().equals(userid) && stage.getGoal().getId().equals(GoalId)
                ? true
                : false;
        if (!isOurStage){

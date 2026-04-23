@@ -1,15 +1,21 @@
 package com.example.auth;
 
+import com.example.auth.controller.AuthController;
 import com.example.auth.dto.TokenResponse;
+import com.example.auth.exception.AccountInactiveException;
+import com.example.auth.exception.GlobalExceptionHandler;
+import com.example.auth.repository.ConfirmationCodeRepository;
+import com.example.auth.repository.UserRepository;
 import com.example.auth.service.AuthService;
 import com.example.auth.service.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
@@ -19,8 +25,9 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 class AuthControllerTest {
 
     @Autowired
@@ -35,6 +42,12 @@ class AuthControllerTest {
     @MockBean
     private JwtService jwtService;
 
+    @MockBean
+    private UserRepository userRepository;
+
+    @MockBean
+    private ConfirmationCodeRepository confirmationCodeRepository;
+
     // ✅ Тест 1: Регистрация — успех
     @Test
     void register_success() throws Exception {
@@ -47,19 +60,19 @@ class AuthControllerTest {
                 "email", "test@example.com"
         ));
 
-        mockMvc.perform(post("/api/v1/auth/register")
+                mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("success"))
-                .andExpect(jsonPath("$.data.username").value("testuser"));
+                .andExpect(jsonPath("$.data.username").value("test@example.com"));
     }
 
     // ✅ Тест 2: Регистрация — username уже занят
     @Test
     void register_usernameAlreadyExists() throws Exception {
         when(authService.register(anyString(), anyString(), anyString()))
-                .thenThrow(new RuntimeException("Username already exists"));
+                .thenThrow(new IllegalArgumentException("Username already exists"));
 
         String body = objectMapper.writeValueAsString(Map.of(
                 "username", "testuser",
@@ -67,12 +80,13 @@ class AuthControllerTest {
                 "email", "test@example.com"
         ));
 
-        mockMvc.perform(post("/api/v1/auth/register")
+                mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value("error"))
-                .andExpect(jsonPath("$.error").value("Username already exists"));
+                .andExpect(jsonPath("$.error.code").value("BAD_REQUEST"))
+                .andExpect(jsonPath("$.error.message").value("Username already exists"));
     }
 
     // ✅ Тест 3: Логин — успех
@@ -99,18 +113,19 @@ class AuthControllerTest {
     @Test
     void login_notConfirmed() throws Exception {
         when(authService.login(anyString(), anyString()))
-                .thenThrow(new RuntimeException("Аккаунт не активирован. Подтвердите почту."));
+                .thenThrow(new AccountInactiveException());
 
         String body = objectMapper.writeValueAsString(Map.of(
                 "username", "testuser",
                 "password", "secret123"
         ));
 
-        mockMvc.perform(post("/api/v1/auth/login")
+                mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value("error"));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.error.code").value("AUTH_ACCOUNT_INACTIVE"));
     }
 
     // ✅ Тест 5: Confirm — успех
